@@ -88,7 +88,7 @@ col3, col4 = st.columns(2)
 with col3:
     render_card("🤖", "독서화랑 AI CS 챗봇", 
                 "Gemini 2.5 Flash 기반 RAG 시스템입니다. 독서화랑의 운영 정책을 학습하여 고객에게 정확하고 친절한 답변을 제공합니다.", 
-                "03_AIChatbot", "btn_03")
+                "03_독서화랑 AI CS 챗봇", "btn_03")
 
 with col4:
     render_card("🏫", "클래스 CS 분석", 
