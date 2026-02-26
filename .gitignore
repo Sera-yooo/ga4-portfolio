@@ -1,0 +1,6 @@
+PlayGround/
+.streamlit/
+
+# [추가] 보안 및 설정 파일
+service-account.json
+*.json

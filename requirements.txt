@@ -1,0 +1,9 @@
+streamlit
+pandas
+gspread
+oauth2client
+plotly
+prophet
+wordcloud
+matplotlib
+google-generativeai
