@@ -179,7 +179,8 @@ c4.metric("최다 발생 이슈", top_cat)
 st.divider()
 
 # --- 탭 구성 ---
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 종합 현황", "📈 상세 분석", "💡 건의사항 집중 분석", "🔮 미래 예측 (AI)", "📋 데이터 원본","🔍 키워드 맞춤 분석"])
+#tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 종합 현황", "📈 상세 분석", "💡 건의사항 집중 분석", "🔮 미래 예측 (AI)", "📋 데이터 원본","🔍 키워드 맞춤 분석"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 종합 현황", "📈 상세 분석", "💡 건의사항 집중 분석", "🔮 미래 예측 (AI)", "🔍 키워드 맞춤 분석"])
 
 # 탭 1: 종합 분석 (순서 변경: 상세표 -> 추이 -> 안전성 진단)
 with tab1:
@@ -536,15 +537,15 @@ with tab4:
                 st.dataframe(forecast_show)
 
 # 탭 5: 원본 데이터
-with tab5:
-    df_display = df.copy()
-    df_display['일시'] = df_display['일시'].dt.strftime('%Y. %m. %d')
-    if '처리일' in df_display.columns:
-        df_display['처리일'] = df_display['처리일'].apply(lambda x: x.strftime('%Y. %m. %d') if pd.notnull(x) else "")
+# with tab5:
+#     df_display = df.copy()
+#     df_display['일시'] = df_display['일시'].dt.strftime('%Y. %m. %d')
+#     if '처리일' in df_display.columns:
+#         df_display['처리일'] = df_display['처리일'].apply(lambda x: x.strftime('%Y. %m. %d') if pd.notnull(x) else "")
         
-    st.dataframe(df_display.sort_values('일시', ascending=False), use_container_width=True)
+#     st.dataframe(df_display.sort_values('일시', ascending=False), use_container_width=True)
 
-with tab6:
+with tab5:
     st.subheader("🔍 키워드 맞춤 분석")
     st.markdown("띄어쓰기와 상관없이 핵심 단어를 검색합니다. (예: '지성의 별'과 '지성의별' 모두 검색)")
 
