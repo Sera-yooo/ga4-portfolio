@@ -1,6 +1,7 @@
 streamlit
 pandas
 gspread
+google-auth
 oauth2client
 plotly
 prophet
@@ -8,3 +9,4 @@ wordcloud
 matplotlib
 google-generativeai
 openpyxl
+xlsxwriter

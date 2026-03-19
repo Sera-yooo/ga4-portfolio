@@ -53,7 +53,7 @@ def generate_contents(row):
     s_str = s_date.strftime('%Y-%m-%d') if isinstance(s_date, datetime) else str(s_date)[:10]
     e_str = e_date.strftime('%Y-%m-%d') if isinstance(e_date, datetime) else str(e_date)[:10]
 
-    mail_sub = "독서화랑 클래스 체험 안내 드립니다."
+    mail_sub = "독서화랑 클래스 체험 계정 안내 드립니다."
 
     # A. 메일 본문
     mail_body = f"""안녕하세요, {sch} {tea} 선생님!
@@ -64,18 +64,19 @@ def generate_contents(row):
 
 [서비스 접속 정보]
 1. 체험 기간: {s_str} ~ {e_str}
-2. 접속 URL: https://school.dmy.co.kr/teacher/
+2. 접속 URL: https://school.dmy.co.kr/
 3. 선생님 관리자 ID: {a_id} / PW: {a_pw}
 4. 학생 ①(2학년)  ID : {s1_id}  / PW: {s1_pw}
    학생 ②(4학년)  ID : {s2_id}  / PW: {s2_pw}
 
 [첨부파일]
-1. 관리 선생님, 일반 선생님, 학생 이용 가이드
-2. 독서화랑 클래스 서비스 소개서  
+1. 이용 가이드 
+2. 서비스 소개서
+3. 학생 계정 명단
 
 [참고 :이용 시 주의 사항]
 - 콘텐츠의 무단 복제 및 배포는 엄격히 금지됩니다.
-- 체험 종료 후 간단한 피드백(설문)에 협조 부탁드립니다.
+- 체험 종료 후 간단한 피드백에 협조 부탁드립니다.
 
 독서화랑 클래스가 선생님의 수업 준비에 실질적인 도움이 될 수 있도록 최선을 다하겠습니다.
 
@@ -93,7 +94,7 @@ def generate_contents(row):
 
 [서비스 접속 정보]
 1. 체험 기간: {s_str} ~ {e_str}
-2. 접속 URL: https://school.dmy.co.kr/teacher/
+2. 접속 URL: https://school.dmy.co.kr/
 3. 선생님 관리자 ID: {a_id} / PW: {a_pw}
 4. 학생 ①(2학년)  ID :  {s1_id}  / PW: {s1_pw}
    학생 ②(4학년)  ID :  {s2_id}  / PW: {s2_pw}
