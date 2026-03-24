@@ -123,25 +123,35 @@ def render():
             doc_list = st.multiselect(
                 "송부 서류 선택 (메일/문자 생성 시 반영)", 
                 [
-                    "이용 가이드", 
+                    "이용 가이드 (관리교사,일반교사,학생용)", 
                     "서비스 소개서", 
                     "학생 계정 명단", 
                     "이용 확인서",
                     "상세 매뉴얼(관리교사용)", 
-                    "상세 매뉴얼(일반교사용)"
+                    "상세 매뉴얼(일반교사용)",
+                    "학운위 체크리스트 (PDF)",
+                    "학운위 체크리스트 (PPT)"
                 ], 
-                default=["이용 가이드", "서비스 소개서"], key="sg_docs"
+                # 핵심 수정: 옵션 리스트에 있는 문자열과 토씨 하나 안 틀리고 똑같이 맞춰야 합니다.
+                default=["이용 가이드 (관리교사,일반교사,학생용)", "서비스 소개서"], 
+                key="sg_docs"
             )
 
             def get_manual_section(selected_list):
                 links = []
+                # 선택된 리스트에 정확히 해당 문구가 있는지 확인
                 if "상세 매뉴얼(관리교사용)" in selected_list:
                     links.append("- 관리교사용: https://drive.google.com/drive/folders/1EOoPtolllNWbUgst_ki8hv-purrh3to0?usp=drive_link")
                 if "상세 매뉴얼(일반교사용)" in selected_list:
-                    links.append("- 일반교사용: https://drive.google.com/drive/folders/15oAEQMXyBwh95_xEbdTQuvKr3aRBP_is?usp=drive_link")
+                    links.append("- 일반교사용: https://drive.google.com/drive/folders/15oAEQMXyBwh95_xEbdTQuvKr3aRBP_is?usp=drive_link")       
+                if "학운위 체크리스트 (PDF)" in selected_list:
+                    links.append("- 학운위(PDF): https://drive.google.com/file/d/1Prg8hOxVQ396BDREX1OAvtJBi0flTExF/view?usp=drive_link")         
+                if "학운위 체크리스트 (PPT)" in selected_list:
+                    links.append("- 학운위(PPT): https://drive.google.com/file/d/1Prg8hOxVQ396BDREX1OAvtJBi0flTExF/view?usp=drive_link")         
                 
                 if links:
-                    return "[상세 매뉴얼 다운로드]\n" + "\n".join(links) + "\n"
+                    # 가독성을 위해 상단에 한 줄 띄움 처리
+                    return "\n[상세 매뉴얼 다운로드]\n" + "\n".join(links) + "\n"
                 return ""
 
             col_btn1, col_btn2 = st.columns(2)
