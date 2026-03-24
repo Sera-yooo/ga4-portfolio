@@ -147,7 +147,7 @@ def render():
                 if "학운위 체크리스트 (PDF)" in selected_list:
                     links.append("- 학운위(PDF): https://drive.google.com/file/d/1Prg8hOxVQ396BDREX1OAvtJBi0flTExF/view?usp=drive_link")         
                 if "학운위 체크리스트 (PPT)" in selected_list:
-                    links.append("- 학운위(PPT): https://docs.google.com/presentation/d/1YPrYwDKA3IJYIuWs2fRSc4v0C4pV3u8I/edit?usp=drive_link&ouid=102025982189355015550&rtpof=true&sd=true")         
+                    links.append("- 학운위(PPT): https://docs.google.com/presentation/d/1YPrYwDKA3IJYIuWs2fRSc4v0C4pV3u8I/edit?usp=sharing&ouid=102025982189355015550&rtpof=true&sd=true")         
                 
                 if links:
                     # 가독성을 위해 상단에 한 줄 띄움 처리
