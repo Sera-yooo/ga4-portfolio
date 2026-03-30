@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import date, timedelta, datetime
 import io
 import os
-from src.data_loader import load_school_trial_data
+from src.data_loader import load_school_trial_data   
 
 # --- [엑셀 일괄 생성용 텍스트 생성 함수] ---
 def generate_excel_contents(row):
