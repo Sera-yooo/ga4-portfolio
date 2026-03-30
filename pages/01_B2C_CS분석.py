@@ -55,14 +55,6 @@ def load_all_data():
 
 df_raw = load_all_data()
 def create_cs_ppt_card(row, name_col, branch_col, q_text, a_text, dept_info, collab_dept, status_bg):
-    """
-    상세 조회 카드를 PPT 슬라이드 한 장으로 생성하는 함수
-    """
-    from pptx import Presentation
-    from pptx.util import Inches, Pt
-    from pptx.dml.color import RGBColor
-    from pptx.enum.shapes import MSO_SHAPE
-    from pptx.enum.text import PP_ALIGN
 
     # 1. PPT 객체 생성 (16:9 비율)
     prs = Presentation()
@@ -204,30 +196,27 @@ with tab1:
     with col_a:
         st.markdown("##### 🏢 부서별 이슈 관여도")
         if '협업 부서' in df.columns:
-            dept_cnt = df[df['협업 부서'].str.strip() != '']['협업 부서'].value_counts().reset_index(name='건수')
-            fig_dept = px.bar(dept_cnt, x='건수', y='협업 부서', orientation='h', color_discrete_sequence=['#FF8C00'])
+            # 공백 제거 및 필터링된 df 사용 확인
+            # value_counts()는 현재 df(필터링된 상태)의 분포를 그대로 반영합니다.
+            dept_cnt = df[df['협업 부서'].str.strip().fillna('') != '']['협업 부서'].value_counts().reset_index()
+            dept_cnt.columns = ['협업 부서', '건수'] # 컬럼명 명확히 지정
+            
+            fig_dept = px.bar(dept_cnt, x='건수', y='협업 부서', orientation='h', 
+                            color_discrete_sequence=['#FF8C00'],
+                            category_orders={"협업 부서": dept_cnt['협업 부서'].tolist()}) # 빈도순 정렬 유지
             st.plotly_chart(fig_dept, use_container_width=True, key="chart_2")
-
-        st.markdown("##### 🍕 카테고리별 비중")
-        if '카테고리' in df.columns:
-            fig_pie = px.pie(df, names='카테고리', hole=0.3)
-            st.plotly_chart(fig_pie, use_container_width=True, key="chart_3") 
 
     with col_b:
         st.markdown("##### 📅 요일별 접수량")
         if '요일' in df.columns:
             day_order = ['월', '화', '수', '목', '금', '토', '일']
-            day_cnt = df['요일'].value_counts().reindex(day_order).reset_index(name='건수')
-            day_cnt.columns = ['요일', '건수'] 
+            # 필터링된 df에서 요일 빈도 계산
+            day_cnt = df['요일'].value_counts().reindex(day_order).fillna(0).reset_index()
+            day_cnt.columns = ['요일', '건수']
+            
             fig_day = px.bar(day_cnt, x='요일', y='건수', color_discrete_sequence=['#A9A9A9'])
             st.plotly_chart(fig_day, use_container_width=True, key="chart_4")
-            
-        st.markdown("##### 🎓 학년별 이슈 분포")
-        if '학년' in df.columns:
-            grade_order = ['초1', '초2', '초3', '초4', '초5']
-            fig_grade = px.bar(df, x='학년', color='카테고리', barmode='stack', 
-                               category_orders={'학년': grade_order})
-            st.plotly_chart(fig_grade, use_container_width=True, key="chart_5")
+
     # 3. 리스크 진단
     st.subheader("3. 🚨 서비스 안정성 진단")
     def classify_risk(val):
@@ -243,6 +232,27 @@ with tab1:
                      color='리스크',
                      color_discrete_map={'⛔ 심각 오류 (시스템/연동)': '#FF4B4B', '📉 컨텐츠오류': '#FF8C00', '⚠️ 일반문의/기타': '#E0E0E0'})
     st.plotly_chart(fig_risk, use_container_width=True, key="chart_6")
+
+    # ---------------------------------------------------------
+    # 추가 요청: 📈 날짜별 접수량 추이 (CS 감소 추세 확인용)
+    # ---------------------------------------------------------
+    st.divider()
+    st.subheader("3. 📈 일자별 CS 접수량 추이")
+    if '일시' in df.columns:
+        # 날짜별로 건수 집계
+        daily_trend = df.groupby(df['일시'].dt.date).size().reset_index(name='접수건수')
+        daily_trend.columns = ['날짜', '접수건수']
+        
+        # 라인 그래프 생성
+        fig_trend = px.line(daily_trend, x='날짜', y='접수건수', 
+                            markers=True,
+                            line_shape="linear",
+                            color_discrete_sequence=['#EF553B']) # 눈에 띄는 색상
+        
+        # 레이아웃 미세 조정 (날짜 포맷 등)
+        fig_trend.update_layout(hovermode="x unified")
+        st.plotly_chart(fig_trend, use_container_width=True, key="chart_trend")
+       
 
 # ==========================================
 # [탭 2] 개별 상세 조회 (기존 탭 유지)

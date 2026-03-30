@@ -9,40 +9,39 @@ TRIAL_SHEET_URL = "https://docs.google.com/spreadsheets/d/1nmAhwBLloq6pFGFIWYahK
 @st.cache_data(ttl=60)
 def load_school_trial_data():
     try:
-        # 1. 인증 설정 (사용자님 방식 적용)
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         creds_dict = dict(st.secrets["gcp_service_account"])
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
 
-        # 2. 시트 열기
         sh = client.open_by_url(TRIAL_SHEET_URL)
-        # GID가 414849783인 워크시트 가져오기
         worksheet = sh.get_worksheet_by_id(414849783) 
-        
-        # 3. 데이터 가져오기
         all_values = worksheet.get_all_values()
-        
-        # 10행(인덱스 9)부터 데이터 시작
         raw_rows = all_values[9:] 
         
         data_list = []
         for row in raw_rows:
-            # 학교명(D열/index 3)이 있는 유효한 행만 필터링
             if len(row) > 3 and row[3].strip():
+                # 안전한 인덱스 접근을 위해 변수화
+                s_code = row[18].strip() if len(row) > 18 else "" # S열
+                
                 data_list.append({
-                    "지역명": row[1],          # B
-                    "상세지역명": row[2],       # C
-                    "학교명": row[3],          # D
-                    "교사명": row[4],          # E
-                    "체험교사계정": row[19],     # T
-                    "시작일": row[20],         # U
-                    "종료일": row[21],         # V
-                    "계약여부": row[25]         # Z
+                    "순번": row[0].strip(),             # A (조회 키)
+                    "지역명": row[1],                   # B
+                    "상세지역명": row[2],                # C
+                    "학교명": row[3],                   # D
+                    "교사명": row[4],                   # E
+                    "교사메일": row[6].strip() if len(row) > 6 else "", # G (수신용)
+                    "학교코드": s_code,                 # S
+                    "체험교사계정": row[19].strip() if len(row) > 19 else "", # T (접속용)
+                    "시작일": row[20] if len(row) > 20 else "", 
+                    "종료일": row[21] if len(row) > 21 else "",
+                    "계약여부": row[25] if len(row) > 25 else "",
+                    # 학생 계정 자동 생성 규칙 적용
+                    "학생1_ID": f"{s_code}-0001" if s_code else "",
+                    "학생2_ID": f"{s_code}-0002" if s_code else ""
                 })
-        
         return pd.DataFrame(data_list)
-        
     except Exception as e:
         st.error(f"데이터 로드 실패: {e}")
         return pd.DataFrame()
