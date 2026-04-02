@@ -111,11 +111,11 @@ def generate_message_body(data, selected_docs, is_sms=False):
 아래 접속 정보를 확인해 주세요.
 
 [서비스 접속 정보]
-체험 기간 : {data['s_str']} ~ {data['e_str']}
-접속 URL : https://school.dmy.co.kr/
-선생님 관리자 ID: {data['a_id']} / PW: {data['a_pw']}
-학생①(2학년) ID : {data['s1_id']} / PW : 0000
-학생②(4학년) ID : {data['s2_id']} / PW : 0000
+1. 체험 기간 : {data['s_str']} ~ {data['e_str']}
+2. 접속 URL : https://school.dmy.co.kr/
+3. 선생님 관리자 ID: {data['a_id']} / PW: {data['a_pw']}
+4. 학생①(2학년) ID : {data['s1_id']} / PW : 0000
+   학생②(4학년) ID : {data['s2_id']} / PW : 0000
 
 {manual_section}
 이용 가이드 및 서비스 소개 자료가 있습니다.
