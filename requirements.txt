@@ -11,3 +11,4 @@ google-generativeai
 openpyxl
 xlsxwriter
 python-pptx
+PyYAML
