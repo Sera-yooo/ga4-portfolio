@@ -90,3 +90,47 @@ def load_cp_trial_data():
     except Exception as e:
         st.error(f"총판 데이터 로드 실패: {e}")
         return pd.DataFrame()
+    
+# 공통 시트 URL (계약 학교 관리 시트)
+def load_contract_school_data():
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+
+        sh = client.open_by_url(TRIAL_SHEET_URL)
+        # 계약 학교 시트 ID로 변경
+        worksheet = sh.get_worksheet_by_id(1104967938) 
+        all_values = worksheet.get_all_values()
+        
+        # A10부터 시작하므로 index 9부터 가져옴
+        raw_rows = all_values[9:] 
+        
+        data_list = []
+        for row in raw_rows:
+            # 학교명(D열, 인덱스 3)이 비어있지 않은 경우만 처리
+            if len(row) > 3 and row[3].strip():
+                data_list.append({
+                    "순번": row[0].strip(),             # A
+                    "지역명": row[1].strip(),           # B
+                    "상세지역": row[2].strip(),         # C
+                    "학교명": row[3].strip(),           # D
+                    "학교고유번호": row[5].strip(),      # F (Index 5)
+                    "학교코드": row[7].strip(),         # H (Index 7)
+                    "계약교사명": row[10].strip(),       # K (Index 10)
+                    "계약교사연락처": row[11].strip(),    # L (Index 11)
+                    "계약교사이메일": row[12].strip(),    # M (Index 12)
+                    "관리교사명": row[13].strip(),       # N (Index 13)
+                    "관리교사연락처": row[14].strip(),    # O (Index 14)
+                    "관리교사이메일": row[15].strip(),    # P (Index 15)
+                    "계약회차": row[16].strip(),         # Q (Index 16)
+                    "계약일": row[17].strip(),           # R (Index 17)
+                    "계약학생수": row[18].strip(),       # S (Index 18)
+                    "시작일": row[20].strip(),           # U (Index 20)
+                    "종료일": row[21].strip(),           # V (Index 21)
+                })
+        return pd.DataFrame(data_list)
+    except Exception as e:
+        st.error(f"계약 학교 데이터 로드 실패: {e}")
+        return pd.DataFrame()

@@ -7,6 +7,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
 # ==========================================
+# CSS 설정
+# ==========================================
+from src.style_utils import apply_purple_theme
+st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+apply_purple_theme()
+
+# ==========================================
 # [설정] 페이지 설정
 # ==========================================
 st.set_page_config(page_title="회원 가입 분석 대시보드", page_icon="📈", layout="wide")

@@ -12,6 +12,13 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 
 # ==========================================
+# CSS 설정
+# ==========================================
+from src.style_utils import apply_purple_theme
+st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+apply_purple_theme()
+
+# ==========================================
 # [설정] 페이지 설정
 # ==========================================
 st.set_page_config(page_title="일반 CS 통합 대시보드", page_icon="📞", layout="wide")

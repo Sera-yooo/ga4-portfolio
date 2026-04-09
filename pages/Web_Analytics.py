@@ -4,6 +4,13 @@ import pandas as pd
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest
 
+# ==========================================
+# CSS 설정
+# ==========================================
+from src.style_utils import apply_purple_theme
+st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+apply_purple_theme()
+
 # [설정] 키 파일 경로 (이름 일치해야 함!)
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'service-account.json'
 

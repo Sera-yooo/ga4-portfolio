@@ -4,6 +4,13 @@ import plotly.express as px  # 👈 [추가] 차트용 모듈
 from datetime import datetime, timedelta # 👈 [추가] 날짜 계산용 모듈
 
 # ==========================================
+# CSS 설정
+# ==========================================
+from src.style_utils import apply_purple_theme
+st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+apply_purple_theme()
+
+# ==========================================
 # 1. 페이지 및 스타일 설정
 # ==========================================
 st.set_page_config(layout="wide", page_title="독서화랑 선생님 대시보드")
