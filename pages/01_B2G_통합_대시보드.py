@@ -13,7 +13,7 @@ style.apply_common_style()
 # 2. 분리된 탭 파일들 불러오기
 try:
     # process 대신 message_work를 가져옵니다.
-    from src.tabs import main_task, school_trial, school_contract, partner, message_work
+    from src.tabs import main_task, school_trial, school_contract, partner, message_work, mail_Templates
 except ImportError:
     st.error("src/tabs 폴더 내의 파일들을 찾을 수 없습니다. 파일명을 확인해주세요.")
 
@@ -39,12 +39,13 @@ with st.sidebar:
         st.rerun()
 
 # --- [메인 탭 구성] ---
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 , tab6 = st.tabs([
     "🕒 오늘 할 일", 
     "🏫 학교 체험", 
     "📜 계약 학교", 
     "🤝 총판 관리", 
-    "📩 안내문 생성" # 탭 이름을 용도에 맞게 변경
+    "📩 안내문 생성",
+    "✉️ 표준 문구(Mail)"
 ])
 
 with tab1:
@@ -59,6 +60,7 @@ with tab3:
 with tab4:
     partner.render()
 
-with tab5:
-    # 이 부분에서 이전에 만든 message_work.py의 내용을 불러옵니다.
+with tab5:    
     message_work.render()
+with tab6:    
+    mail_Templates.render()

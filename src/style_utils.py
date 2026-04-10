@@ -14,7 +14,17 @@ BORDER_COLOR = "rgba(14, 165, 233, 0.1)" # 연한 블루 테두리
 TEXT_DARK = "#0F172A"        # 메인 네이비 블랙 (가독성 최상)
 TEXT_SUB = "#64748B"         # 보조 회청색
 
-def apply_common_style():
+def apply_common_style(is_sidebar_page=True):
+    """
+    is_sidebar_page: 하위 페이지(pages/*.py)인 경우 True, 
+                     메인 로직(app.py)인 경우 False를 전달받음
+    """
+    # 하위 페이지에서만 로그인 체크 실행
+    if is_sidebar_page:
+        if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
+            st.warning("🔒 권한이 없습니다. 메인 페이지에서 로그인해 주세요.")
+            st.stop()
+
     """시원한 바다 느낌의 마린 블루 테마 적용"""
     st.markdown(f"""
         <style>
