@@ -6,9 +6,9 @@ import plotly.express as px
 # ==========================================
 # CSS 설정
 # ==========================================
-from src.style_utils import apply_purple_theme
+import src.style_utils as style
 st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
-apply_purple_theme()
+style.apply_common_style()
 
 # ==========================================
 # 1. 페이지 및 기본 설정

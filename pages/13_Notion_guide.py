@@ -1,9 +1,9 @@
 import streamlit as st
-from src.style_utils import apply_purple_theme, render_stat_card
 
 # 1. 페이지 설정
-st.set_page_config(page_title="독서화랑 업무 가이드", layout="wide")
-apply_purple_theme()
+import src.style_utils as style
+st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+style.apply_common_style()
 
 def display_guide():
     st.markdown("### 📘 업무 SOP 및 가이드")
@@ -19,7 +19,7 @@ def display_guide():
     col1, col2 = st.columns(2)
     
     with col1:
-        render_stat_card(
+        style.render_stat_card(
             emoji="🚀",
             title="실시간 가이드",
             value="Notion",
@@ -28,7 +28,7 @@ def display_guide():
         )
         
     with col2:
-        render_stat_card(
+        style.render_stat_card(
             emoji="✍️",
             title="문서 수정 권한",
             value="Edit",

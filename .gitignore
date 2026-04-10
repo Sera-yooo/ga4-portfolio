@@ -4,3 +4,8 @@ PlayGround/
 # [추가] 보안 및 설정 파일
 service-account.json
 *.json
+
+# 가상환경 (가장 중요: 수만 개의 파일을 Git 추적에서 제외)
+.venv/
+venv/
+ENV/
