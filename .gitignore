@@ -1,11 +1,11 @@
+# [수정] 모든 JSON을 막지 말고, 보안 파일만 정확히 지정하세요
+service-account.json
+# 만약 secrets 폴더 안에 json들을 넣으셨다면 아래처럼
+# secrets/*.json
+
+# 나머지 설정은 유지
 PlayGround/
 .streamlit/
-
-# [추가] 보안 및 설정 파일
-service-account.json
-*.json
-
-# 가상환경 (가장 중요: 수만 개의 파일을 Git 추적에서 제외)
 .venv/
 venv/
 ENV/

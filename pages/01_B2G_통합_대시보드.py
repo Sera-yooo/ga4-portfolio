@@ -11,11 +11,15 @@ st.set_page_config(page_title="독서화랑 팀 통합 리소스", layout="wide"
 style.apply_common_style()
 
 # 2. 분리된 탭 파일들 불러오기
-try:
-    # process 대신 message_work를 가져옵니다.
-    from src.tabs import main_task, school_trial, school_contract, partner, message_work, mail_Templates,school_trial_input
-except ImportError:
-    st.error("src/tabs 폴더 내의 파일들을 찾을 수 없습니다. 파일명을 확인해주세요.")
+from src.tabs import (
+    main_task, 
+    school_trial, 
+    school_contract, 
+    partner, 
+    message_work, 
+    mail_Templates,
+    school_trial_input 
+)
 
 # --- [공통 헤더 영역] ---
 st.title("📚 독서화랑 B2G 통합 관리 시스템")
