@@ -75,7 +75,7 @@ def display_excel_list():
         with col_admin_2:
             st.markdown("##### 🧪 테스트 및 공유 계정")
             style.render_admin_card("독서화랑 사용자 (B2C/B2G)", "https://book.dmy.co.kr/", 
-                             [{"label": "사용자 1", "id": "hwarang1234", "pw": "123456"},
+                             [{"label": "사용자 1", "id": "testhwarang22", "pw": "123456"},
                               {"label": "사용자 2", "id": "testminsung", "pw": "123456"}])
             
             style.render_admin_card("클래스 사용자 및 CS메일", "https://book.dmy.co.kr/", 
