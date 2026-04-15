@@ -6,12 +6,18 @@ import src.style_utils as style
 
 # 1. 페이지 및 테마 설정
 st.set_page_config(page_title="Morning Hub", layout="wide")
-style.apply_common_style()
-style.apply_morning_hub_style()
 
-# 파일 경로를 pages 폴더 안으로 설정
+# 스타일 적용 (함수가 존재할 때만 실행되도록 안전하게 호출)
+try:
+    style.apply_common_style()
+    style.apply_morning_hub_style()
+except AttributeError:
+    st.error("스타일 함수를 찾을 수 없습니다. src/style_utils.py 파일을 확인해주세요.")
+
+# 파일 경로 설정 (pages 폴더 내부)
 FILE_PATH = 'pages/morning_log.csv'
 
+# --- [데이터 로직 함수] ---
 def load_data():
     tasks = []
     if os.path.exists(FILE_PATH):
@@ -30,20 +36,15 @@ def load_data():
     return tasks
 
 def save_data(tasks):
-    # 데이터 리스트를 다시 CSV 형식으로 변환하여 저장
+    # 폴더가 없을 경우를 대비해 pages 폴더가 있는지 체크 (선택 사항)
+    if not os.path.exists('pages'):
+        os.makedirs('pages')
+        
     with open(FILE_PATH, 'w', encoding='utf-8') as f:
         for t in tasks:
-            line = f"{t['date']},{t['content']},{t['time']},{t['status']},{t['reg_date']},{t['reg_time']}\n"
+            # 각 항목을 쉼표로 연결하되, 데이터에 쉼표가 있을 경우를 대비해 공백 제거(strip)
+            line = f"{t['date']},{t['content'].replace(',', ' ')},{t['time']},{t['status']},{t['reg_date']},{t['reg_time']}\n"
             f.write(line)
-
-def get_date_options():
-    days = ['월', '화', '수', '목', '금', '토', '일']
-    options = []
-    for i in range(-3, 10): # 과거 3일부터 미래 10일까지
-        d = datetime.now() + timedelta(days=i)
-        label = d.strftime(f"%Y-%m-%d ({days[d.weekday()]})")
-        options.append((d.strftime("%Y-%m-%d"), label))
-    return options
 
 # 세션 상태 초기화
 if "emergency_tasks" not in st.session_state:
@@ -51,7 +52,7 @@ if "emergency_tasks" not in st.session_state:
 if "routine_done" not in st.session_state:
     st.session_state.routine_done = [False] * 5
 
-# --- 레이아웃 ---
+# --- [UI 레이아웃] ---
 st.title("☀️ 업무 관제 센터")
 
 tab_main, tab_cs = st.tabs(["📊 업무 루틴 & 메모 로그", "🏫 CS & 상시 업무"])
@@ -59,103 +60,93 @@ tab_main, tab_cs = st.tabs(["📊 업무 루틴 & 메모 로그", "🏫 CS & 상
 with tab_main:
     col_left, col_right = st.columns([1, 1.5], gap="large")
 
+    # --- 왼쪽: 업무 등록 영역 ---
     with col_left:
         st.subheader("⚡ 업무 등록")
         
         with st.container(border=True):
-            # 2. 변수 정의 위치: 버튼보다 위에 있어야 노란색 불이 사라집니다.
             task_input = st.text_area("무슨 일을 해야 하나요?", placeholder="예: 북원초 답변 메일 보내기")
             
-            time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00",]
+            time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
             selected_time = st.radio("리마인드 시간", time_options, horizontal=True)
 
-            # 3. 버튼 클릭 시점 로직 (여기가 사용자님이 질문하신 위치입니다)
             if st.button("📌 저장하기", type="primary"):
                 if not task_input.strip():
                     st.warning("내용을 입력해주세요.")
                 else:
+                    # 한국 시간 계산
                     now = datetime.utcnow() + timedelta(hours=9)
                     days = ['월', '화', '수', '목', '금', '토', '일']
                     weekday = days[now.weekday()]
                     
                     new_task = {
-                        "date": now.strftime("%Y-%m-%d"), # 필터링 기준 날짜
-                        "content": task_input,
+                        "date": now.strftime("%Y-%m-%d"),
+                        "content": task_input.strip(),
                         "time": selected_time,
                         "status": "진행중",
                         "reg_date": now.strftime("%Y-%m-%d"),
                         "reg_time": now.strftime(f"%H:%M ({weekday})"),
                     }
                     
-                    # 데이터 저장 및 리프레시
-                    st.session_state.emergency_tasks.append(new_task)
-                    save_data(st.session_state.emergency_tasks)
-                    st.rerun()
+                    # [중요] 1. 먼저 파일에서 최신 데이터를 읽어온 뒤 추가 (데이터 유실 방지)
+                    current_tasks = load_data()
+                    current_tasks.append(new_task)
+                    
+                    # [중요] 2. 세션과 파일에 동시에 업데이트
+                    st.session_state.emergency_tasks = current_tasks
+                    save_data(current_tasks)
+                    
+                    st.success("업무가 등록되었습니다!")
+                    st.rerun() # 화면을 즉시 새로고침해서 반영
 
-with col_right:
-    # --- [조회 영역] ---
+    # --- 오른쪽: 조회 및 히스토리 영역 ---
     with col_right:
         st.subheader("📝 업무 히스토리")
 
-        # 1. 날짜 선택
+        # 1. 날짜 선택 및 필터링
         selected_date = st.date_input("🗓️ 날짜 선택", value=datetime.now())
-
-        # 2. 형식을 '2026-04-15'로 고정 (CSV 저장 형식과 일치)
         target_date_str = selected_date.strftime("%Y-%m-%d")
 
-        # 3. 데이터 로드 (함수가 리스트를 반환하는지 확인)
+        # 실시간 데이터 동기화
         st.session_state.emergency_tasks = load_data()
 
-        # 4. 필터링 (t['date']가 위에 load_data의 키와 정확히 같은지 확인)
         filtered_tasks = [
             (idx, t) for idx, t in enumerate(st.session_state.emergency_tasks) 
             if t.get('date') == target_date_str
         ]
 
-    # 디버깅용 (데이터가 들어오는지 확인하고 싶다면 아래 주석 해제)
-    # st.write(f"조회 대상: {target_date_str}")
-    # st.write(f"전체 데이터 개수: {len(st.session_state.emergency_tasks)}")
-    # 5. 화면 렌더링
-    if not filtered_tasks:
-        st.info(f"📅 {target_date_str}에는 등록된 업무가 없습니다.")
-    else:
-# --- [조회 영역 내 카드 렌더링 부분] ---
-        for real_idx, task in reversed(filtered_tasks):
-            is_done = task['status'] == "완료"
-            
-            with st.container(border=True):                        
-                # 헤더 (시간 정보)
-                c1, c2 = st.columns([1, 1])
-                c1.markdown(f"**{'✅' if is_done else '⏳'} {task['time']}**")
-                c2.markdown(f"<div style='text-align:right; font-size:11px; color:gray;'>기록: {task['reg_time']}</div>", unsafe_allow_html=True)
+        # 2. 화면 렌더링
+        if not filtered_tasks:
+            st.info(f"📅 {target_date_str}에는 등록된 업무가 없습니다.")
+        else:
+            for real_idx, task in reversed(filtered_tasks):
+                is_done = task['status'] == "완료"
                 
-                # 본문
-                content_style = "text-decoration: line-through; color: #adb5bd;" if is_done else ""
-                st.markdown(f"<div style='margin:10px 0; {content_style}'>{task['content']}</div>", unsafe_allow_html=True)
+                with st.container(border=True):                        
+                    # 헤더
+                    c1, c2 = st.columns([1, 1])
+                    c1.markdown(f"**{'✅' if is_done else '⏳'} {task['time']}**")
+                    c2.markdown(f"<div style='text-align:right; font-size:11px; color:gray;'>기록: {task['reg_time']}</div>", unsafe_allow_html=True)
+                    
+                    # 본문
+                    content_style = "text-decoration: line-through; color: #adb5bd;" if is_done else ""
+                    st.markdown(f"<div style='margin:10px 0; {content_style}'>{task['content']}</div>", unsafe_allow_html=True)
 
-                # 버튼 영역
-                btn_col1, btn_col2, _ = st.columns([1, 1, 3])
-                
-                with btn_col1:
-                    button_label = "복구" if is_done else "완료"
-                    # key값에 real_idx를 사용하여 고유성 유지
-                    if st.button(button_label, key=f"btn_status_{real_idx}"):
-                        # 1. 세션 상태 업데이트
-                        new_status = "진행중" if is_done else "완료"
-                        st.session_state.emergency_tasks[real_idx]['status'] = new_status
-                        # 2. 파일에 즉시 저장
-                        save_data(st.session_state.emergency_tasks)
-                        # 3. 화면 새로고침
-                        st.rerun()
+                    # 조작 버튼
+                    btn_col1, btn_col2, _ = st.columns([1, 1, 3])
+                    
+                    with btn_col1:
+                        if st.button("복구" if is_done else "완료", key=f"btn_status_{real_idx}"):
+                            new_status = "진행중" if is_done else "완료"
+                            st.session_state.emergency_tasks[real_idx]['status'] = new_status
+                            save_data(st.session_state.emergency_tasks)
+                            st.rerun()
 
-                with btn_col2:
-                    if st.button("삭제", key=f"btn_del_{real_idx}"):
-                        # 1. 세션 상태에서 해당 인덱스 삭제
-                        st.session_state.emergency_tasks.pop(real_idx)
-                        # 2. 파일에 즉시 저장
-                        save_data(st.session_state.emergency_tasks)
-                        # 3. 화면 새로고침
-                        st.rerun()
+                    with btn_col2:
+                        if st.button("삭제", key=f"btn_del_{real_idx}"):
+                            st.session_state.emergency_tasks.pop(real_idx)
+                            save_data(st.session_state.emergency_tasks)
+                            st.rerun()
 
 # --- Tab 2: CS & 상시 업무 ---
 with tab_cs:

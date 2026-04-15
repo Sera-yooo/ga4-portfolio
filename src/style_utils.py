@@ -12,7 +12,30 @@ BORDER_COLOR = "rgba(14, 165, 233, 0.15)"
 TEXT_DARK = "#0F172A"
 TEXT_SUB = "#64748B"
 
-def apply_common_style():
+def apply_common_style(is_sidebar_page=False):
+    if is_sidebar_page:
+        with st.sidebar:
+            st.markdown("### 🔒 보안 인증")
+            if "password_correct" not in st.session_state:
+                st.session_state["password_correct"] = False
+
+            if not st.session_state["password_correct"]:
+                pwd = st.text_input("Password", type="password", key="sidebar_pwd")
+                if st.button("인증하기"):
+                    if pwd == st.secrets["password"]:
+                        st.session_state["password_correct"] = True
+                        st.rerun()
+                    else:
+                        st.error("비밀번호가 틀렸습니다.")
+                
+                # 인증되지 않았으면 여기서 중단 (페이지 본문 안 보임)
+                st.stop()
+            else:
+                st.success("인증 완료")
+                if st.button("로그아웃"):
+                    st.session_state["password_correct"] = False
+                    st.rerun()    
+    
     st.markdown(f"""
         <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
