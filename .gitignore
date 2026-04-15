@@ -9,3 +9,6 @@ PlayGround/
 .venv/
 venv/
 ENV/
+# 업무 로그 파일 제외 (보안 및 개인정보 보호)
+pages/morning_log.csv
+*.csv

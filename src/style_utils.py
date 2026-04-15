@@ -65,7 +65,7 @@ def apply_common_style():
         </style>
     """, unsafe_allow_html=True)
 
-def apply_morning_hub_style():
+def apply_morning_hub_style(): 
     st.markdown(f"""
         <style>
             /* 1. 카드 컨테이너 스타일 (st.container용) */
