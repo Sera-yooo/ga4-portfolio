@@ -1,38 +1,25 @@
 import streamlit as st
 
 # ==========================================
-# [중요] 마린 블루 & 화이트 테마 통합 색상 정의
+# [중요] 테마 통합 색상 정의
 # ==========================================
-MAIN_PRIMARY = "#0EA5E9"     # 시원한 오션 블루
+MAIN_PRIMARY = "#0EA5E9"
 MAIN_GRADIENT = "linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%)"
-LIGHT_BG = "#FFFFFF"         # 깔끔한 순백색 배경
-SIDEBAR_BG = "#F8FAFC"       # 사이드바 (아주 연한 회청색)
-CARD_BG = "rgba(255, 255, 255, 0.8)" # 반투명 화이트 카드
-BORDER_COLOR = "rgba(14, 165, 233, 0.1)" # 연한 블루 테두리
+LIGHT_BG = "#FFFFFF"
+SIDEBAR_BG = "#F8FAFC"
+CARD_BG = "rgba(255, 255, 255, 0.9)"
+BORDER_COLOR = "rgba(14, 165, 233, 0.15)"
+TEXT_DARK = "#0F172A"
+TEXT_SUB = "#64748B"
 
-# 텍스트 색상
-TEXT_DARK = "#0F172A"        # 메인 네이비 블랙 (가독성 최상)
-TEXT_SUB = "#64748B"         # 보조 회청색
-
-def apply_common_style(is_sidebar_page=True):
-    """
-    is_sidebar_page: 하위 페이지(pages/*.py)인 경우 True, 
-                     메인 로직(app.py)인 경우 False를 전달받음
-    """
-    # 하위 페이지에서만 로그인 체크 실행
-    if is_sidebar_page:
-        if "password_correct" not in st.session_state or not st.session_state["password_correct"]:
-            st.warning("🔒 권한이 없습니다. 메인 페이지에서 로그인해 주세요.")
-            st.stop()
-
-    """시원한 바다 느낌의 마린 블루 테마 적용"""
+def apply_common_style():
     st.markdown(f"""
         <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
         /* 1. 전체 기본 폰트 및 배경색 */
         html, body, [class*="css"] {{
-            font-family: 'Pretendard', -apple-system, sans-serif;
+            font-family: 'Pretendard', sans-serif;
             color: {TEXT_DARK};
         }}
         
@@ -40,93 +27,83 @@ def apply_common_style(is_sidebar_page=True):
             background-color: {LIGHT_BG};
         }}
 
-        /* 2. 사이드바 디자인 (연한 회청색 배경) */
+        /* 2. 사이드바 디자인 */
         [data-testid="stSidebar"] {{
             background-color: {SIDEBAR_BG} !important;
             border-right: 1px solid #E2E8F0;
         }}
 
-        /* 3. 카드형 버튼 (블루 포인트) */
+        /* 3. 기본 버튼 (메인 페이지 전용 커다란 카드 버튼) */
+        /* 메인 페이지의 '이동' 버튼 등에만 적용되도록 범위를 좁힙니다 */
         div.stButton > button {{
-            background: {CARD_BG} !important;
-            backdrop-filter: blur(12px) !important;
-            border: 1px solid {BORDER_COLOR} !important;
-            border-radius: 20px !important;
-            padding: 30px 25px !important;
-            color: {TEXT_DARK} !important;
-            text-align: left !important;
-            box-shadow: 0 8px 32px 0 rgba(14, 165, 233, 0.05) !important;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-            width: 100% !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+            font-weight: 600 !important;
         }}
 
-        div.stButton > button:hover {{
-            transform: translateY(-10px) scale(1.02);
-            border: 1px solid {MAIN_PRIMARY} !important;
-            background: #ffffff !important;
-            box-shadow: 0 20px 40px rgba(14, 165, 233, 0.15) !important;
-        }}
-
-        /* 4. 탭 디자인 - 마린 블루 스타일 */
+        /* 4. 탭 디자인 */
         .stTabs [data-baseweb="tab"] {{
             background-color: #F1F5F9;
             border-radius: 10px;
             padding: 8px 16px;
             color: {TEXT_SUB};
             border: none !important;
-            transition: 0.3s;
-        }}
-
-        .stTabs [data-baseweb="tab"]:hover {{
-            background-color: #E0F2FE;
-            color: {MAIN_PRIMARY};
         }}
 
         .stTabs [data-baseweb="tab"][aria-selected="true"] {{
             background: {MAIN_GRADIENT};
             color: white !important;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }}
 
-        /* 5. 수평선 및 기타 요소 */
-        hr {{
-            border-color: #E2E8F0 !important;
-        }}
-
-        /* 6. 제작자 배지 애니메이션 (마린 블루 버전) */
+        /* 5. 애니메이션 배지 */
         .creator-badge {{
-            background: #0F172A; 
-            color: #F1F5F9;
-            padding: 24px;
-            border-radius: 24px;
-            text-align: center;
-            margin-top: 50px;
-            border: 1px solid #1E293B;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: #0F172A; color: #F1F5F9; padding: 24px; border-radius: 24px;
+            text-align: center; margin-top: 50px; position: relative; overflow: hidden;
         }}
+        @keyframes rotate {{ 100% {{ transform: rotate(360deg); }} }}
+        </style>
+    """, unsafe_allow_html=True)
 
-        .creator-badge::before {{
-            content: "";
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: conic-gradient(from 0deg, transparent, #0EA5E9, transparent 30%, #22D3EE, transparent 70%);
-            animation: rotate 6s linear infinite;
-        }}
+def apply_morning_hub_style():
+    st.markdown(f"""
+        <style>
+            /* 1. 카드 컨테이너 스타일 (st.container용) */
+            div[data-testid="stVerticalBlockBorderWrapper"] {{
+                margin-bottom: 0px !important;
+            }}
+            
+            /* 카드 내부의 컬럼 간격 조정 */
+            div[data-testid="stHorizontalBlock"] {{
+                gap: 0.5rem !important;
+            }}
 
-        .creator-badge-inner {{
-            position: relative;
-            background: #0F172A;
-            padding: 20px;
-            border-radius: 20px;
-            z-index: 1;
-        }}
+            /* 2. 카드 전용 버튼 (더 작고 파랗게) */
+            /* 특정 키워드를 포함하는 버튼만 타겟팅하거나 모든 컬럼 내 버튼 타겟팅 */
+            div[data-testid="stColumn"] button {{
+                min-height: 30px !important;
+                height: 30px !important;
+                width: 100% !important; /* 컬럼 너비에 맞춤 */
+                font-size: 12px !important;
+                border-radius: 8px !important;
+                background-color: #f0f9ff !important; /* 아주 연한 파랑 */
+                border: 1px solid #e0f2fe !important;
+                color: #0ea5e9 !important;
+                padding: 0 !important;
+            }}
 
-        @keyframes rotate {{
-            100% {{ transform: rotate(360deg); }}
-        }}        
+            div[data-testid="stColumn"] button:hover {{
+                background-color: #0ea5e9 !important;
+                color: white !important;
+                border: none !important;
+            }}
+
+            /* 3. 완료 텍스트 (취소선) */
+            .done-text {{
+                text-decoration: line-through !important;
+                color: #94a3b8 !important;
+                opacity: 0.6;
+            }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -299,3 +276,44 @@ def render_footer_badge():
             </div>
         </div>
     """, unsafe_allow_html=True)        
+
+def apply_morning_hub_style():
+    st.markdown("""
+        <style>
+            /* 1. 박제하기 버튼 - 파란색 강조 */
+            div.stButton > button[kind="primary"] {
+                background-color: #007bff !important;
+                color: white !important;
+                border: none !important;
+                height: 40px !important;
+                font-weight: bold !important;
+            }
+
+            /* 2. 카드 내부 버튼 스타일 */
+            .task-card div.stButton > button {
+                width: 50px !important;
+                height: 25px !important;
+                font-size: 11px !important;
+                padding: 0px !important;
+                background-color: #f0f4f8 !important;
+                color: #555 !important;
+                border: 1px solid #dce3eb !important;
+            }
+            
+            /* 3. 완료된 항목 스타일 */
+            .done-text {
+                text-decoration: line-through !important;
+                color: #a0a0a0 !important;
+            }
+            
+            /* 4. 카드 디자인 보완 */
+            .task-card {
+                background-color: #ffffff;
+                border: 1px solid #eef2f8;
+                border-radius: 12px;
+                padding: 12px 15px;
+                margin-bottom: 10px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            }
+        </style>
+    """, unsafe_allow_html=True)
