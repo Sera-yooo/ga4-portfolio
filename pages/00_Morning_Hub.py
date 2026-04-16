@@ -90,60 +90,49 @@ with tab_main:
         st.subheader("⚡ 업무 " + ("수정" if edit_idx is not None else "등록"))
         
         with st.container(border=True):
-            # [핵심] 수정 모드일 때와 아닐 때의 key를 다르게 줍니다.
-            # 이렇게 하면 Streamlit이 위젯 충돌 에러를 내지 않습니다.
             if edit_idx is not None:
+                # --- [수정 모드] ---
                 task_to_edit = st.session_state.emergency_tasks[edit_idx]
-                task_input = st.text_area("무슨 일을 해야 하나요?", 
-                                        value=task_to_edit['content'], # 수정할 내용 주입
-                                        key=f"edit_area_{edit_idx}") # 유니크한 키값
-            else:
-                task_input = st.text_area("무슨 일을 해야 하나요?", 
-                                        value="", # 등록 모드일 땐 비우기
-                                        key="register_area")
-            
-            # [변경] 시간 라디오 버튼도 수정 시 기존 시간으로 인덱스 맞추기
-            time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
-            curr_time_idx = 0
-            if edit_idx is not None:
+                # 수정 시에는 기존 내용을 담은 전용 입력창을 띄웁니다.
+                task_input = st.text_area("내용 수정", 
+                                        value=task_to_edit['content'], 
+                                        key=f"edit_area_{edit_idx}")
+                
+                # 시간 선택 (기존 값 유지)
+                time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
                 try:
-                    curr_time_idx = time_options.index(st.session_state.emergency_tasks[edit_idx]['time'])
-                except:
-                    curr_time_idx = 0
+                    curr_idx = time_options.index(task_to_edit['time'])
+                except: curr_idx = 0
+                selected_time = st.radio("리마인드 시간", time_options, index=curr_idx, horizontal=True, key="edit_time")
 
-            selected_time = st.radio("리마인드 시간", time_options, index=curr_time_idx, horizontal=True)
-
-            if edit_idx is not None:
                 col_btn1, col_btn2 = st.columns(2)
                 if col_btn1.button("✅ 수정 완료", type="primary", use_container_width=True):
-                    if not task_input.strip():
-                        st.warning("내용을 입력해주세요.")
-                    else:
-                        # 데이터 업데이트
-                        st.session_state.emergency_tasks[edit_idx]['content'] = task_input.strip()
-                        st.session_state.emergency_tasks[edit_idx]['time'] = selected_time
-                        save_data(st.session_state.emergency_tasks)
-                        
-                        # [변경] 수정 완료 후 입력창 비우기
-                        st.session_state.editing_idx = None
-                        st.session_state["task_input_area"] = "" 
-                        st.success("수정되었습니다!")
-                        st.rerun()
-                
+                    st.session_state.emergency_tasks[edit_idx]['content'] = task_input.strip()
+                    st.session_state.emergency_tasks[edit_idx]['time'] = selected_time
+                    save_data(st.session_state.emergency_tasks)
+                    st.session_state.editing_idx = None # 수정 모드 종료
+                    st.rerun()
                 if col_btn2.button("❌ 취소", use_container_width=True):
                     st.session_state.editing_idx = None
-                    # [변경] 취소 시에도 입력창 비우기
-                    st.session_state["task_input_area"] = ""
                     st.rerun()
-            
+
             else:
+                # --- [일반 등록 모드] ---
+                # 등록 시에는 항상 깨끗한 'register_area' 키를 사용합니다.
+                task_input = st.text_area("무슨 일을 해야 하나요?", 
+                                        value="", 
+                                        placeholder="예: 북원초 답변 메일 보내기", 
+                                        key="register_area")
+                
+                time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
+                selected_time = st.radio("리마인드 시간", time_options, horizontal=True, key="reg_time")
+
                 if st.button("📌 저장하기", type="primary", use_container_width=True):
                     if not task_input.strip():
                         st.warning("내용을 입력해주세요.")
                     else:
                         now = datetime.utcnow() + timedelta(hours=9)
-                        days = ['월', '화', '수', '목', '금', '토', '일']
-                        weekday = days[now.weekday()]
+                        # 위에서 선택한 날짜(selected_date) 사용
                         save_date_str = selected_date.strftime("%Y-%m-%d")
                         
                         new_task = {
@@ -152,13 +141,13 @@ with tab_main:
                             "time": selected_time,
                             "status": "진행중",
                             "reg_date": now.strftime("%Y-%m-%d"),
-                            "reg_time": now.strftime(f"%H:%M ({weekday})"),
+                            "reg_time": now.strftime("%H:%M"),
                         }
                         
                         append_data(new_task)
-                        # [변경] 등록 후에도 입력창 비우기
-                        st.session_state["task_input_area"] = ""
+                        # 데이터 로드 후 세션 갱신
                         st.session_state.emergency_tasks = load_data()
+                        st.success("등록되었습니다!")
                         st.rerun()
 
     # --- 오른쪽: 조회 및 히스토리 영역 ---
