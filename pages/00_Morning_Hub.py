@@ -35,15 +35,23 @@ def load_data():
                     })
     return tasks
 
-def save_data(tasks):
-    # 폴더가 없을 경우를 대비해 pages 폴더가 있는지 체크 (선택 사항)
+def save_data_single(task):
+    """새로운 업무 하나만 파일 끝에 추가 (가장 안전)"""
     if not os.path.exists('pages'):
         os.makedirs('pages')
         
+    with open(FILE_PATH, 'a', encoding='utf-8') as f:
+        # 데이터에 쉼표가 있을 경우를 대비해 치환
+        clean_content = task['content'].replace(',', ' ')
+        line = f"{task['date']},{clean_content},{task['time']},{task['status']},{task['reg_date']},{task['reg_time']}\n"
+        f.write(line)
+
+def save_all_data(tasks):
+    """상태 변경(완료/복구)이나 삭제 시 전체 데이터를 다시 기록할 때만 사용"""
     with open(FILE_PATH, 'w', encoding='utf-8') as f:
         for t in tasks:
-            # 각 항목을 쉼표로 연결하되, 데이터에 쉼표가 있을 경우를 대비해 공백 제거(strip)
-            line = f"{t['date']},{t['content'].replace(',', ' ')},{t['time']},{t['status']},{t['reg_date']},{t['reg_time']}\n"
+            clean_content = t['content'].replace(',', ' ')
+            line = f"{t['date']},{clean_content},{t['time']},{t['status']},{t['reg_date']},{t['reg_time']}\n"
             f.write(line)
 
 # 세션 상태 초기화
@@ -74,7 +82,6 @@ with tab_main:
                 if not task_input.strip():
                     st.warning("내용을 입력해주세요.")
                 else:
-                    # 1. 한국 시간 계산
                     now = datetime.utcnow() + timedelta(hours=9)
                     days = ['월', '화', '수', '목', '금', '토', '일']
                     weekday = days[now.weekday()]
@@ -88,16 +95,17 @@ with tab_main:
                         "reg_time": now.strftime(f"%H:%M ({weekday})"),
                     }
                     
-                    # 2. 최신 데이터 불러와서 추가 (유실 방지)
-                    all_tasks = load_data()
-                    all_tasks.append(new_task)
+                    # 1. 파일 끝에 즉시 추가 (모드 'a')
+                    save_data_single(new_task)
                     
-                    # 3. 파일 저장 및 세션 상태 동기화
-                    save_data(all_tasks)
-                    st.session_state.emergency_tasks = all_tasks
+                    # 2. 세션 상태 업데이트 (화면 표시용)
+                    # 만약 세션에 데이터가 없다면 먼저 로드 후 추가
+                    if "emergency_tasks" not in st.session_state:
+                        st.session_state.emergency_tasks = load_data()
+                    st.session_state.emergency_tasks.append(new_task)
                     
-                    st.success("업무가 등록되었습니다!")
-                    st.rerun() 
+                    st.success(f"'{new_task['content']}' 업무가 등록되었습니다!")
+                    st.rerun()
 
     # --- 오른쪽: 조회 및 히스토리 영역 ---
     with col_right:
