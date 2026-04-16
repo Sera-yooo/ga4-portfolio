@@ -62,10 +62,23 @@ if "emergency_tasks" not in st.session_state:
     st.session_state.emergency_tasks = load_data()
 if "routine_done" not in st.session_state:
     st.session_state.routine_done = [False] * 5
+if "editing_idx" not in st.session_state:
+    st.session_state.editing_idx = None
+if st.session_state.editing_idx is not None:
+    # 현재 수정하려는 데이터 가져오기
+    if "emergency_tasks" in st.session_state:
+        task_to_edit = st.session_state.emergency_tasks[st.session_state.editing_idx]
+        st.session_state["task_input_area"] = task_to_edit['content']    
 
-# --- [UI 레이아웃] ---
+# 1. 페이지 제목 및 기본 설정
 st.title("☀️ 업무 관제 센터")
 
+# 2. [핵심] 날짜 선택기를 상단으로 이동 (여기서 변수가 정의되어야 아래에서 쓸 수 있음)
+# 모든 탭과 컬럼에서 공통으로 사용할 날짜입니다.
+selected_date = st.date_input("🗓️ 조회 및 등록 날짜 선택", value=datetime.now())
+target_date_str = selected_date.strftime("%Y-%m-%d")
+
+# 3. 탭 구성
 tab_main, tab_cs = st.tabs(["📊 업무 루틴 & 메모 로그", "🏫 CS & 상시 업무"])
 
 with tab_main:
@@ -73,52 +86,86 @@ with tab_main:
 
     # --- 왼쪽: 업무 등록 영역 ---
     with col_left:
-        st.subheader("⚡ 업무 등록")
+        edit_idx = st.session_state.get("editing_idx", None)
+        st.subheader("⚡ 업무 " + ("수정" if edit_idx is not None else "등록"))
         
         with st.container(border=True):
-            task_input = st.text_area("무슨 일을 해야 하나요?", placeholder="예: 북원초 답변 메일 보내기", key="task_input_area")
+            # [핵심] 수정 모드일 때와 아닐 때의 key를 다르게 줍니다.
+            # 이렇게 하면 Streamlit이 위젯 충돌 에러를 내지 않습니다.
+            if edit_idx is not None:
+                task_to_edit = st.session_state.emergency_tasks[edit_idx]
+                task_input = st.text_area("무슨 일을 해야 하나요?", 
+                                        value=task_to_edit['content'], # 수정할 내용 주입
+                                        key=f"edit_area_{edit_idx}") # 유니크한 키값
+            else:
+                task_input = st.text_area("무슨 일을 해야 하나요?", 
+                                        value="", # 등록 모드일 땐 비우기
+                                        key="register_area")
             
+            # [변경] 시간 라디오 버튼도 수정 시 기존 시간으로 인덱스 맞추기
             time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
-            selected_time = st.radio("리마인드 시간", time_options, horizontal=True)
+            curr_time_idx = 0
+            if edit_idx is not None:
+                try:
+                    curr_time_idx = time_options.index(st.session_state.emergency_tasks[edit_idx]['time'])
+                except:
+                    curr_time_idx = 0
 
-            if st.button("📌 저장하기", type="primary", use_container_width=True):
-                if not task_input.strip():
-                    st.warning("내용을 입력해주세요.")
-                else:
-                    now = datetime.utcnow() + timedelta(hours=9)
-                    days = ['월', '화', '수', '목', '금', '토', '일']
-                    weekday = days[now.weekday()]
-                    
-                    new_task = {
-                        "date": now.strftime("%Y-%m-%d"),
-                        "content": task_input.strip(),
-                        "time": selected_time,
-                        "status": "진행중",
-                        "reg_date": now.strftime("%Y-%m-%d"),
-                        "reg_time": now.strftime(f"%H:%M ({weekday})"),
-                    }
-                    
-                    # [해결] 덮어쓰지 않고 파일 끝에 추가만 함
-                    append_data(new_task)
-                    
-                    # 세션 상태 갱신 및 새로고침
-                    st.session_state.emergency_tasks = load_data()
-                    st.success("등록 완료!")
+            selected_time = st.radio("리마인드 시간", time_options, index=curr_time_idx, horizontal=True)
+
+            if edit_idx is not None:
+                col_btn1, col_btn2 = st.columns(2)
+                if col_btn1.button("✅ 수정 완료", type="primary", use_container_width=True):
+                    if not task_input.strip():
+                        st.warning("내용을 입력해주세요.")
+                    else:
+                        # 데이터 업데이트
+                        st.session_state.emergency_tasks[edit_idx]['content'] = task_input.strip()
+                        st.session_state.emergency_tasks[edit_idx]['time'] = selected_time
+                        save_data(st.session_state.emergency_tasks)
+                        
+                        # [변경] 수정 완료 후 입력창 비우기
+                        st.session_state.editing_idx = None
+                        st.session_state["task_input_area"] = "" 
+                        st.success("수정되었습니다!")
+                        st.rerun()
+                
+                if col_btn2.button("❌ 취소", use_container_width=True):
+                    st.session_state.editing_idx = None
+                    # [변경] 취소 시에도 입력창 비우기
+                    st.session_state["task_input_area"] = ""
                     st.rerun()
+            
+            else:
+                if st.button("📌 저장하기", type="primary", use_container_width=True):
+                    if not task_input.strip():
+                        st.warning("내용을 입력해주세요.")
+                    else:
+                        now = datetime.utcnow() + timedelta(hours=9)
+                        days = ['월', '화', '수', '목', '금', '토', '일']
+                        weekday = days[now.weekday()]
+                        save_date_str = selected_date.strftime("%Y-%m-%d")
+                        
+                        new_task = {
+                            "date": save_date_str,
+                            "content": task_input.strip(),
+                            "time": selected_time,
+                            "status": "진행중",
+                            "reg_date": now.strftime("%Y-%m-%d"),
+                            "reg_time": now.strftime(f"%H:%M ({weekday})"),
+                        }
+                        
+                        append_data(new_task)
+                        # [변경] 등록 후에도 입력창 비우기
+                        st.session_state["task_input_area"] = ""
+                        st.session_state.emergency_tasks = load_data()
+                        st.rerun()
 
     # --- 오른쪽: 조회 및 히스토리 영역 ---
-    with col_right:
-        st.subheader("📝 업무 히스토리")
-
-        # 1. 날짜 선택
-        selected_date = st.date_input("🗓️ 날짜 선택", value=datetime.now())
-        target_date_str = selected_date.strftime("%Y-%m-%d")
-
-        # 2. 데이터 동기화 (세션에 없을 때만 로드하여 불필요한 파일 접근 방지)
+    with col_right:        
         if "emergency_tasks" not in st.session_state:
             st.session_state.emergency_tasks = load_data()
-        
-        # 필터링 (항상 세션 상태 기준)
+            
         filtered_tasks = [
             (idx, t) for idx, t in enumerate(st.session_state.emergency_tasks) 
             if t.get('date') == target_date_str
@@ -149,7 +196,7 @@ with tab_main:
                     )
 
                     # 조작 버튼 영역
-                    btn_col1, btn_col2, _ = st.columns([1, 1, 3])
+                    btn_col1, btn_col2, btn_col3, _ = st.columns([1, 1, 1, 2.5])
                     
                     with btn_col1:
                         label = "복구" if is_done else "완료"
@@ -166,6 +213,10 @@ with tab_main:
                             st.session_state.emergency_tasks.pop(real_idx)
                             save_data(st.session_state.emergency_tasks)
                             st.rerun()
+                    with btn_col3:
+                        if st.button("✏️", key=f"edit_{real_idx}"):
+                            st.session_state.editing_idx = real_idx
+                            st.rerun() 
 
 # --- Tab 2: CS & 상시 업무 ---
 with tab_cs:
