@@ -65,16 +65,16 @@ with tab_main:
         st.subheader("⚡ 업무 등록")
         
         with st.container(border=True):
-            task_input = st.text_area("무슨 일을 해야 하나요?", placeholder="예: 북원초 답변 메일 보내기")
+            task_input = st.text_area("무슨 일을 해야 하나요?", placeholder="예: 북원초 답변 메일 보내기", key="task_input_area")
             
             time_options = ["오전 10:00","오전 11:00", "오전 12:00", "오후 02:00", "오후 03:00","오후 04:00","오후 05:00","오후 06:00"]
             selected_time = st.radio("리마인드 시간", time_options, horizontal=True)
 
-            if st.button("📌 저장하기", type="primary"):
+            if st.button("📌 저장하기", type="primary", use_container_width=True):
                 if not task_input.strip():
                     st.warning("내용을 입력해주세요.")
                 else:
-                    # 한국 시간 계산
+                    # 1. 한국 시간 계산
                     now = datetime.utcnow() + timedelta(hours=9)
                     days = ['월', '화', '수', '목', '금', '토', '일']
                     weekday = days[now.weekday()]
@@ -88,62 +88,74 @@ with tab_main:
                         "reg_time": now.strftime(f"%H:%M ({weekday})"),
                     }
                     
-                    # [중요] 1. 먼저 파일에서 최신 데이터를 읽어온 뒤 추가 (데이터 유실 방지)
-                    current_tasks = load_data()
-                    current_tasks.append(new_task)
+                    # 2. 최신 데이터 불러와서 추가 (유실 방지)
+                    all_tasks = load_data()
+                    all_tasks.append(new_task)
                     
-                    # [중요] 2. 세션과 파일에 동시에 업데이트
-                    st.session_state.emergency_tasks = current_tasks
-                    save_data(current_tasks)
+                    # 3. 파일 저장 및 세션 상태 동기화
+                    save_data(all_tasks)
+                    st.session_state.emergency_tasks = all_tasks
                     
                     st.success("업무가 등록되었습니다!")
-                    st.rerun() # 화면을 즉시 새로고침해서 반영
+                    st.rerun() 
 
     # --- 오른쪽: 조회 및 히스토리 영역 ---
     with col_right:
         st.subheader("📝 업무 히스토리")
 
-        # 1. 날짜 선택 및 필터링
+        # 1. 날짜 선택
         selected_date = st.date_input("🗓️ 날짜 선택", value=datetime.now())
         target_date_str = selected_date.strftime("%Y-%m-%d")
 
-        # 실시간 데이터 동기화
-        st.session_state.emergency_tasks = load_data()
-
+        # 2. 데이터 동기화 (세션에 없을 때만 로드하여 불필요한 파일 접근 방지)
+        if "emergency_tasks" not in st.session_state:
+            st.session_state.emergency_tasks = load_data()
+        
+        # 필터링 (항상 세션 상태 기준)
         filtered_tasks = [
             (idx, t) for idx, t in enumerate(st.session_state.emergency_tasks) 
             if t.get('date') == target_date_str
         ]
 
-        # 2. 화면 렌더링
+        # 3. 화면 렌더링
         if not filtered_tasks:
             st.info(f"📅 {target_date_str}에는 등록된 업무가 없습니다.")
         else:
+            # 최신순 정렬 (reversed)
             for real_idx, task in reversed(filtered_tasks):
                 is_done = task['status'] == "완료"
                 
                 with st.container(border=True):                        
-                    # 헤더
-                    c1, c2 = st.columns([1, 1])
-                    c1.markdown(f"**{'✅' if is_done else '⏳'} {task['time']}**")
-                    c2.markdown(f"<div style='text-align:right; font-size:11px; color:gray;'>기록: {task['reg_time']}</div>", unsafe_allow_html=True)
+                    # 헤더 영역
+                    header_col1, header_col2 = st.columns([1, 1])
+                    header_col1.markdown(f"**{'✅' if is_done else '⏳'} {task['time']}**")
+                    header_col2.markdown(
+                        f"<div style='text-align:right; font-size:11px; color:gray;'>기록: {task['reg_time']}</div>", 
+                        unsafe_allow_html=True
+                    )
                     
-                    # 본문
+                    # 본문 영역
                     content_style = "text-decoration: line-through; color: #adb5bd;" if is_done else ""
-                    st.markdown(f"<div style='margin:10px 0; {content_style}'>{task['content']}</div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div style='margin:10px 0; {content_style}'>{task['content']}</div>", 
+                        unsafe_allow_html=True
+                    )
 
-                    # 조작 버튼
+                    # 조작 버튼 영역
                     btn_col1, btn_col2, _ = st.columns([1, 1, 3])
                     
                     with btn_col1:
-                        if st.button("복구" if is_done else "완료", key=f"btn_status_{real_idx}"):
-                            new_status = "진행중" if is_done else "완료"
-                            st.session_state.emergency_tasks[real_idx]['status'] = new_status
+                        label = "복구" if is_done else "완료"
+                        if st.button(label, key=f"btn_status_{real_idx}"):
+                            # 세션 데이터 수정
+                            st.session_state.emergency_tasks[real_idx]['status'] = "진행중" if is_done else "완료"
+                            # 파일 저장 및 반영
                             save_data(st.session_state.emergency_tasks)
                             st.rerun()
 
                     with btn_col2:
                         if st.button("삭제", key=f"btn_del_{real_idx}"):
+                            # 데이터 삭제
                             st.session_state.emergency_tasks.pop(real_idx)
                             save_data(st.session_state.emergency_tasks)
                             st.rerun()
