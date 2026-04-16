@@ -2,16 +2,16 @@ import streamlit as st
 
 # 1. 페이지 설정
 import src.style_utils as style
-st.set_page_config(page_title="독서화랑 대시보드", layout="wide")
+st.set_page_config(page_title="독서화랑 노션 위키 이동 페이지", layout="wide")
 style.apply_common_style()
 
 def display_guide():
-    st.markdown("### 📘 업무 SOP 및 가이드")
+    st.markdown("### 📘 독서화랑 노션 위키")
     
     # 노션 원본 주소
-    notion_url = "https://placid-wishbone-f63.notion.site/B2G-B2C-SOP-33d4ee74bdba804fb5e3c36035942b95"
+    notion_url = "https://www.notion.so/dsmynotification/f5762eafdd5c834e8e240196c951d6a4?v=8ca62eafdd5c82609305887da638776f"
     
-    st.info("💡 보안 정책으로 인해 가이드는 노션(Notion) 원본 페이지에서 확인하실 수 있습니다.")
+    st.info("💡 보안 정책으로 인해 가이드는 노션(Notion) 링크로 접속해야 합니다.")
 
     # ---------------------------------------------------------
     # 🏝️ 상단 정보 카드 (퍼플 디자인)
@@ -22,9 +22,9 @@ def display_guide():
         style.render_stat_card(
             emoji="🚀",
             title="실시간 가이드",
-            value="Notion",
+            value="WIKI",
             unit="",
-            description="노션에서 수정된 최신 매뉴얼을\n실시간으로 확인하실 수 있습니다."
+            description="노션에서 수정된 최신 문서를 \n실시간으로 확인하실 수 있습니다."
         )
         
     with col2:
@@ -33,7 +33,7 @@ def display_guide():
             title="문서 수정 권한",
             value="Edit",
             unit="",
-            description="가이드 수정이 필요한 경우\n노션 로그인 후 직접 편집이 가능합니다."
+            description="권한이 필요한 경우 @이주영 님께 요청합니다."
         )
 
     st.write("")
@@ -49,7 +49,7 @@ def display_guide():
     
     with center_col:
         # 버튼 텍스트 구성
-        btn_label = "📖 독서화랑 SOP 가이드북 열기 (새 창)"
+        btn_label = "📖 독서화랑 노션 위키 열기 (새 창)"
         
         # 버튼 클릭 시 노션으로 연결
         if st.button(btn_label, key="go_to_notion", use_container_width=True):
@@ -64,11 +64,25 @@ def display_guide():
     # ---------------------------------------------------------
     # 📌 하단 안내 사항
     # ---------------------------------------------------------
-    with st.expander("❓ 가이드 이용 안내", expanded=False):
+    with st.expander("📌 노션 위키에서 확인 가능한 항목", expanded=False):
         st.markdown("""
-        - **로그인 권한:** 노션 계정 권한에 따라 읽기 또는 편집이 가능합니다.
-        - **검색 팁:** 노션 페이지 내부의 검색(Ctrl+P) 기능을 활용하면 원하는 매뉴얼을 빨리 찾을 수 있습니다.
-        - **문의:** 내용 수정이 필요하거나 권한이 없는 경우 팀장님께 문의해 주세요.
+            #### 1. 운영 현황
+
+            * 부서별 작업 현황
+
+            #### 2. 자료 및 링크 모음
+
+            * 회의 관련 링크
+            * QA 시트 모음
+            * 설문 결과 모음
+            * 독서화랑 가이드 모음
+
+            #### 3. 정책 및 문서
+
+            * 정책서
+            * 개인정보처리방침 / 이용약관
+            * 인증 / 실증 문서
+            * 기타 문서
         """)
 
     st.divider()

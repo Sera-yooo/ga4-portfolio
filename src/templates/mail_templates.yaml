@@ -1,6 +1,6 @@
 # 체험 안내 - 메일 버전
 trial_notice_mail:
-  subject: "[독서화랑] {{sch}} 체험 서비스 계정 안내"
+  subject: "[독서화랑클래스] {{sch}} 체험 서비스 계정 안내"
   body: |
     안녕하세요, {{sch}} {{tea}} 선생님!
     우리 아이들의 즐거운 독서 습관 형성을 돕는 독서화랑 클래스입니다.
@@ -32,7 +32,7 @@ trial_notice_mail:
 
 # 체험 안내 - 문자 버전
 trial_notice_sms:
-  subject: "독서화랑 체험 안내"
+  subject: "독서화랑클래스 체험 안내"
   body: |
     안녕하세요, {{sch}} {{tea}} 선생님.
     독서화랑 클래스입니다.
@@ -58,7 +58,7 @@ trial_notice_sms:
     감사합니다.
 
 contract_notice:
-  subject: "📢 [독서화랑] {{sch}} {{tea}} 선생님, 정규 서비스 계정 및 운영 지원 안내"
+  subject: "📢 [독서화랑클래스] {{sch}} {{tea}} 선생님, 정규 서비스 계정 및 운영 지원 안내"
   body: |
     안녕하세요, {{tea}} 선생님.
     우리 아이들의 즐거운 독서 습관 형성을 돕는 독서화랑 클래스입니다.
