@@ -21,38 +21,41 @@ FILE_PATH = 'pages/morning_log.csv'
 def load_data():
     tasks = []
     if os.path.exists(FILE_PATH):
-        with open(FILE_PATH, 'r', encoding='utf-8') as f:
-            for line in f:
-                parts = line.strip().split(',')
-                if len(parts) >= 6:
-                    tasks.append({
-                        "date": parts[0].strip(),
-                        "content": parts[1].strip(),
-                        "time": parts[2].strip(),
-                        "status": parts[3].strip(),
-                        "reg_date": parts[4].strip(),
-                        "reg_time": parts[5].strip()
-                    })
+        try:
+            with open(FILE_PATH, 'r', encoding='utf-8') as f:
+                for line in f:
+                    parts = line.strip().split(',')
+                    if len(parts) >= 6:
+                        tasks.append({
+                            "date": parts[0].strip(),
+                            "content": parts[1].strip(),
+                            "time": parts[2].strip(),
+                            "status": parts[3].strip(),
+                            "reg_date": parts[4].strip(),
+                            "reg_time": parts[5].strip()
+                        })
+        except Exception as e:
+            st.error(f"파일 로드 오류: {e}")
     return tasks
 
-def save_data_single(task):
-    """새로운 업무 하나만 파일 끝에 추가 (가장 안전)"""
+def save_data(tasks):
+    """전체 리스트를 파일에 저장 (완료/삭제 시 사용)"""
     if not os.path.exists('pages'):
         os.makedirs('pages')
-        
-    with open(FILE_PATH, 'a', encoding='utf-8') as f:
-        # 데이터에 쉼표가 있을 경우를 대비해 치환
-        clean_content = task['content'].replace(',', ' ')
-        line = f"{task['date']},{clean_content},{task['time']},{task['status']},{task['reg_date']},{task['reg_time']}\n"
-        f.write(line)
-
-def save_all_data(tasks):
-    """상태 변경(완료/복구)이나 삭제 시 전체 데이터를 다시 기록할 때만 사용"""
     with open(FILE_PATH, 'w', encoding='utf-8') as f:
         for t in tasks:
             clean_content = t['content'].replace(',', ' ')
             line = f"{t['date']},{clean_content},{t['time']},{t['status']},{t['reg_date']},{t['reg_time']}\n"
             f.write(line)
+
+def append_data(task):
+    """새로운 업무 하나만 끝에 추가 (등록 시 사용 - 덮어쓰기 방지)"""
+    if not os.path.exists('pages'):
+        os.makedirs('pages')
+    with open(FILE_PATH, 'a', encoding='utf-8') as f:
+        clean_content = task['content'].replace(',', ' ')
+        line = f"{task['date']},{clean_content},{task['time']},{task['status']},{task['reg_date']},{task['reg_time']}\n"
+        f.write(line)
 
 # 세션 상태 초기화
 if "emergency_tasks" not in st.session_state:
@@ -95,16 +98,12 @@ with tab_main:
                         "reg_time": now.strftime(f"%H:%M ({weekday})"),
                     }
                     
-                    # 1. 파일 끝에 즉시 추가 (모드 'a')
-                    save_data_single(new_task)
+                    # [해결] 덮어쓰지 않고 파일 끝에 추가만 함
+                    append_data(new_task)
                     
-                    # 2. 세션 상태 업데이트 (화면 표시용)
-                    # 만약 세션에 데이터가 없다면 먼저 로드 후 추가
-                    if "emergency_tasks" not in st.session_state:
-                        st.session_state.emergency_tasks = load_data()
-                    st.session_state.emergency_tasks.append(new_task)
-                    
-                    st.success(f"'{new_task['content']}' 업무가 등록되었습니다!")
+                    # 세션 상태 갱신 및 새로고침
+                    st.session_state.emergency_tasks = load_data()
+                    st.success("등록 완료!")
                     st.rerun()
 
     # --- 오른쪽: 조회 및 히스토리 영역 ---
