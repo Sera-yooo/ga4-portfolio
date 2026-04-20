@@ -174,3 +174,48 @@ def load_contract_school_data():
     except Exception as e:
         st.error(f"계약 학교 데이터 로드 실패: {e}")
         return pd.DataFrame()
+    
+def load_distributor_monitoring_data():
+    try:
+        # 1. 인증 및 시트 연결
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+
+        sheet_url = "https://docs.google.com/spreadsheets/d/1LoiiCRBT9XjAPhT-38RlVk3k8hJaz52Zc4TivtawhgQ/edit"
+        sheet = client.open_by_url(sheet_url).worksheet("총판 계정 누적 접속 기록")
+        
+    # 2. 데이터 가져오기
+        all_values = sheet.get_all_values()
+        # 헤더(3행)는 무시하고 데이터(4행부터)만 가져옵니다.
+        data = all_values[3:] 
+        
+        # 3. [해결책] 컬럼명을 우리가 직접 순서대로 정의합니다.
+        # 시트의 A열부터 J열까지의 순서와 일치해야 합니다.
+        fixed_columns = [
+            "No", "지역", "총판명", "총판담당자", "학교명", 
+            "교사구분", "관리교사계정", "계정배부일", "누적방문", "마지막로그인"
+        ]
+        
+        # 데이터프레임 생성 (데이터 개수와 컬럼 개수 맞춤)
+        # 만약 시트에 열이 더 많다면 슬라이싱으로 자릅니다.
+        df = pd.DataFrame([row[:10] for row in data], columns=fixed_columns)
+
+        # 4. 데이터 정제
+        # 양끝 공백 제거
+        df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+
+        # 병합 셀 처리 (ffill)
+        fill_target = ["No", "지역", "총판명", "총판담당자", "학교명"]
+        for col in fill_target:
+            df[col] = df[col].replace('', None).ffill()
+
+        # 계정이 없는 빈 줄 삭제
+        df = df[df["관리교사계정"] != ""]
+        
+        return df
+
+    except Exception as e:
+        st.error(f"❌ 데이터 로드 중 오류 발생: {e}")
+        return pd.DataFrame()
