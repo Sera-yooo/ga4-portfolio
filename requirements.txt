@@ -5,3 +5,4 @@ google-analytics-data
 google-auth
 google-api-python-client
 gspread
+oauth2client
