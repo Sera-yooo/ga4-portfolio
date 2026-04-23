@@ -119,7 +119,7 @@ def render():
             
             # 시트 구조 A(0) ~ Z(25) ...
             new_row = [""] * 30 
-            new_row[0] = next_no            # A: 순번
+            new_row[0] = next_no            # A: 순번 
             new_row[1] = sel_region         # B: 지역1
             new_row[2] = region2            # C: 지역2
             new_row[3] = school_name        # D: 학교명

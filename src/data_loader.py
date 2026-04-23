@@ -24,7 +24,7 @@ def load_school_trial_data():
         for row in raw_rows:
             # D열(학교명)이 비어있지 않은 경우만 처리
             if len(row) > 3 and row[3].strip():
-                # 안전한 인덱스 접근을 위해 학교코드(S열) 미리 추출
+                # 안전한 인덱스 접근을 위해 학교코드(S열) 미리 추출 
                 s_code = row[18].strip() if len(row) > 18 else "" # S열
                 
                 data_list.append({

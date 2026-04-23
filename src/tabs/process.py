@@ -234,7 +234,7 @@ def render():
             key="at_docs"
         )
 
-        col_btn1, col_btn2 = st.columns(2)
+        col_btn1, col_btn2 = st.columns(2) 
         msg_data_auto = {
             'sch': auto_sch, 'tea': auto_tea,
             'a_id': auto_adm_id, 'a_pw': auto_adm_pw,

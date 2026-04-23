@@ -9,7 +9,7 @@ if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
 from src.modules.message_manager import MessageTemplateManager
-from src.data_loader import load_school_trial_data, load_contract_school_data
+from src.data_loader import load_school_trial_data, load_contract_school_data 
 
 # --- [공통 함수 1] 날짜 안전하게 파싱 ---
 def safe_parse_date(date_str, default_date):
