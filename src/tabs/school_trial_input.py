@@ -68,33 +68,35 @@ def render():
         st.divider()
 
         # 학교 및 담당자 정보
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
         with c1:
             school_name = st.text_input("학교명 (필수)")
         with c2:
             teacher_name = st.text_input("담당 교사명 (필수)")
         with c3:
-            teacher_phone = st.text_input("연락처 (F열)", placeholder="숫자만 입력")
-
-        c4, c5, c6 = st.columns(3)
+            school_phone = st.text_input("학교연락처 (F열)", placeholder="숫자만 입력")
         with c4:
-            teacher_email = st.text_input("이메일 (G열)")
+            teacher_phone = st.text_input("연락처 (E열)", placeholder="숫자만 입력")
+
+        c5, c6, c7 = st.columns(3)
         with c5:
+            teacher_email = st.text_input("이메일 (H열)")
+        with c6:
             # H열: 유입경로 드롭박스 (기본값 빈칸)
             inflow_options = ["미분류", "총판소개", "직접유입"]
-            inflow_path = st.selectbox("유입 경로 (H열)", inflow_options, index=inflow_options.index("미분류"))
-        with c6:
+            inflow_path = st.selectbox("유입 경로 (I열)", inflow_options, index=inflow_options.index("미분류"))
+        with c7:
             process_options = ["신청", "진행중", "종료"]
-            process_status = st.selectbox("진행 여부 (R열)", process_options, index=process_options.index("진행중"))
+            process_status = st.selectbox("진행 여부 (S열)", process_options, index=process_options.index("진행중"))
 
         st.divider()
 
         # 코드 생성 관련 입력
         cc1, cc2 = st.columns(2)
         with cc1:
-            sch_init = st.text_input("학교 영문 초성 (S열)", placeholder="예: WH").upper()
+            sch_init = st.text_input("학교 영문 초성 (T열)", placeholder="예: WH").upper()
         with cc2:
-            sch_num = st.number_input("넘버링 (S열)", min_value=1, value=1)
+            sch_num = st.number_input("넘버링 (T열)", min_value=1, value=1)
 
         # 코드 조합 로직
         type_code = type_map[sel_type]
@@ -113,6 +115,7 @@ def render():
             st.error("❌ 학교명, 담당자명, 영문 초성은 필수 입력 사항입니다.")
         else:
             formatted_phone = format_phone_number(teacher_phone) if teacher_phone else ""
+            school_formatted_phone = format_phone_number(school_phone) if school_phone else ""
             
             # 시트 구조 A(0) ~ Z(25) ...
             new_row = [""] * 30 
@@ -120,19 +123,20 @@ def render():
             new_row[1] = sel_region         # B: 지역1
             new_row[2] = region2            # C: 지역2
             new_row[3] = school_name        # D: 학교명
-            new_row[4] = teacher_name       # E: 교사명
-            new_row[5] = formatted_phone    # F: 연락처
-            new_row[6] = teacher_email      # G: 이메일
-            new_row[7] = inflow_path        # H: 유입경로 (선택값)
+            new_row[4] = school_formatted_phone    # E: 학교연락처
+            new_row[5] = teacher_name       # F: 교사명            
+            new_row[6] = formatted_phone    # G: 연락처
+            new_row[7] = teacher_email      # H: 이메일
+            new_row[8] = inflow_path        # I: 유입경로 (선택값)
             
-            new_row[14] = "부"               # O: 진행상태 (고정값)
-            new_row[17] = process_status    # R: 진행여부
-            new_row[18] = res_sch_code      # S: 학교코드
-            new_row[19] = res_sch_id        # T: 체험교사계정
-            new_row[20] = str(start_date)   # U: 시작일
-            new_row[21] = str(end_date)     # V: 종료일
-            new_row[22] = "부"               # W: 출력여부 (고정값)
-            new_row[25] = "부"               # Z: 계약여부 (고정값)
+            new_row[15] = "부"               # P: 진행상태 (고정값)
+            new_row[18] = process_status    # S: 진행여부
+            new_row[19] = res_sch_code      # T: 학교코드
+            new_row[20] = res_sch_id        # U: 체험교사계정
+            new_row[21] = str(start_date)   # V: 시작일
+            new_row[22] = str(end_date)     # W: 종료일
+            new_row[23] = "부"               # X: 출력여부 (고정값)
+            new_row[26] = "부"               # AA: 계약여부 (고정값)
             
             with st.spinner("구글 시트에 데이터를 기록 중..."):
                 if append_new_school_data(new_row):

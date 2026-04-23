@@ -32,25 +32,26 @@ def load_school_trial_data():
                     "지역명": row[1] if len(row) > 1 else "",           # B
                     "상세지역명": row[2] if len(row) > 2 else "",         # C
                     "학교명": row[3].strip(),                            # D
-                    "교사명": row[4].strip() if len(row) > 4 else "",      # E
-                    "연락처": row[5].strip() if len(row) > 5 else "",      # F
-                    "교사메일": row[6].strip() if len(row) > 6 else "",    # G
-                    "유입경로": row[7].strip() if len(row) > 7 else "",    # H
+                    "학교연락처": row[4].strip() if len(row) > 5 else "",      # E
+                    "교사명": row[5].strip() if len(row) > 4 else "",      # F                    
+                    "연락처": row[6].strip() if len(row) > 5 else "",      # G
+                    "교사메일": row[7].strip() if len(row) > 6 else "",    # H
+                    "유입경로": row[8].strip() if len(row) > 7 else "",    # I
                     
                     # --- 상담 및 상태 정보 ---
-                    "1차상담": row[11].strip() if len(row) > 11 else "",   # L
-                    "2차상담": row[12].strip() if len(row) > 12 else "",   # M
-                    "3차상담": row[13].strip() if len(row) > 13 else "",   # N
-                    "진행상태": row[14].strip() if len(row) > 14 else "부", # O
-                    "진행여부": row[17].strip() if len(row) > 17 else "",   # R
+                    "1차상담": row[12].strip() if len(row) > 11 else "",   # M
+                    "2차상담": row[13].strip() if len(row) > 12 else "",   # N
+                    "3차상담": row[14].strip() if len(row) > 13 else "",   # O
+                    "진행상태": row[15].strip() if len(row) > 14 else "부", # R
+                    "진행여부": row[18].strip() if len(row) > 17 else "",   # P
                     
                     # --- 계정 및 날짜 정보 ---
-                    "학교코드": s_code,                                    # S
-                    "체험교사계정": row[19].strip() if len(row) > 19 else "", # T
-                    "시작일": row[20] if len(row) > 20 else "",            # U
-                    "종료일": row[21] if len(row) > 21 else "",            # V
-                    "출력여부": row[22] if len(row) > 22 else "부",         # W
-                    "계약여부": row[25] if len(row) > 25 else "부",         # Z
+                    "학교코드": s_code,                                    # T
+                    "체험교사계정": row[20].strip() if len(row) > 20 else "", # U
+                    "시작일": row[21] if len(row) > 21 else "",            # V
+                    "종료일": row[22] if len(row) > 22 else "",            # W
+                    "출력여부": row[23] if len(row) > 23 else "부",         # Z
+                    "계약여부": row[26] if len(row) > 26 else "부",         # AA
                     
                     # --- 부가 정보 (필요시) ---
                     "학생1_ID": f"{s_code}-0001" if s_code else "",
