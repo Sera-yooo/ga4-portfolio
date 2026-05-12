@@ -124,7 +124,7 @@ def append_new_school_data(data_list):
         worksheet = sh.get_worksheet_by_id(414849783)
         
         # 시트 맨 아래에 새로운 행 추가
-        worksheet.append_row(data_list)
+        worksheet.append_row(data_list, value_input_option='USER_ENTERED')        
         return True
     except Exception as e:
         st.error(f"데이터 추가 실패: {e}")
