@@ -23,13 +23,28 @@ def render():
         return
 
     # 행 스타일 정의 (통화예정 등 강조)
+    # def style_row(row):
+    #     status = row.get('상담상태', '')
+    #     if status == "통화예정":
+    #         return ['background-color: #fff9db'] * len(row) # 연한 노랑
+    #     if status == "확인필요":
+    #         return ['background-color: #fff0f0'] * len(row) # 연한 빨강
+    #     return [''] * len(row)
+    
     def style_row(row):
-        status = row.get('상담상태', '')
-        if status == "통화예정":
-            return ['background-color: #fff9db'] * len(row) # 연한 노랑
-        if status == "확인필요":
-            return ['background-color: #fff0f0'] * len(row) # 연한 빨강
-        return [''] * len(row)
+        status = row.get('상담상태', '')        
+        colors = {
+            "26' 1학기 상담종료": "background-color: #fce4ec; color: #880e4f;", # 연분홍/주황 계열
+            "통화예정": "background-color: #e1f5fe; color: #01579b;",          # 연파랑
+            "미상담": "background-color: #f5f5f5; color: #616161;",            # 회색
+            "계약완료": "background-color: #e8f5e9; color: #1b5e20;",          # 연초록
+            "확인필요": "background-color: #fff9c4; color: #f57f17;"           # 노랑/주황
+        }
+        
+        style = colors.get(status, "")
+        return [style] * len(row)    
+
+
 
     # 보여줄 컬럼 순서 (B~G열 우선 배치)
     priority_cols = ["지역명", "상세지역명", "학교명", "학교연락처", "교사명", "연락처", "상담상태"]
@@ -199,8 +214,9 @@ def render():
 
                 # --- [섹션 1] 상담 타임라인
                 st.markdown("#### 📜 상담 타임라인")
+
                 if not school_logs.empty:
-                    # 날짜순 정렬 (최신순)
+                    # 날짜순 정렬 (최신순이 아래로 가도록 오름차순 유지)
                     school_logs["날짜"] = pd.to_datetime(school_logs["날짜"], errors="coerce")
                     school_logs = school_logs.sort_values("날짜", ascending=True)
 
@@ -210,45 +226,54 @@ def render():
                         c_content = log.get("상담내용", "-")
                         c_manager = log.get("담당자", "미지정")
 
-                        # 아이콘 설정
-                        icon = {
-                            "상담": "📞", "계약": "🎉", "메모": "📝", 
-                            "부재중": "📵", "상담종료": "📌"
-                        }.get(c_type, "📌")
+                        # 1. 시트 이미지 기준 색상 매핑 로직 추가
+                        # 부재중(파랑), 상담종료(주황/분홍), 상담(보라), 계약완료(초록), 메모(회색)
+                        type_styles = {
+                            "부재중": {"bg": "#e1f5fe", "text": "#01579b", "icon": "📵"},
+                            "상담종료": {"bg": "#fbe9e7", "text": "#bf360c", "icon": "📌"},
+                            "상담": {"bg": "#f3e5f5", "text": "#4a148c", "icon": "📞"},
+                            "계약완료": {"bg": "#e8f5e9", "text": "#1b5e20", "icon": "🎉"},
+                            "메모": {"bg": "#eeeeee", "text": "#424242", "icon": "📝"}
+                        }
+                        
+                        # 설정되지 않은 유형은 기본값(회색) 처리
+                        style = type_styles.get(c_type, {"bg": "#f5f5f5", "text": "#333333", "icon": "📌"})
                         
                         with st.container(border=True):
-                            # 1. 상단 레이아웃 (날짜 강조 배지 & 담당자)
+                            # 1. 상단 레이아웃 (색상 배지 적용)
                             col_header1, col_header2 = st.columns([0.7, 0.3])
                             
                             with col_header1:
                                 st.markdown(f"""
-                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
                                         <span style="
-                                            background-color: #e1f5fe; 
-                                            color: #01579b; 
-                                            padding: 2px 8px; 
-                                            border-radius: 4px; 
+                                            background-color: {style['bg']}; 
+                                            color: {style['text']}; 
+                                            padding: 2px 10px; 
+                                            border-radius: 12px; 
                                             font-weight: bold; 
-                                            font-size: 0.9rem;
+                                            font-size: 0.8rem;
                                         ">{c_date}</span>
-                                        <span style="font-weight: bold; font-size: 1rem;">{icon} {c_type}</span>
+                                        <span style="font-weight: bold; font-size: 0.95rem;">
+                                            {style['icon']} {c_type}
+                                        </span>
                                     </div>
                                 """, unsafe_allow_html=True)
                                 
                             with col_header2:
-                                st.markdown(f"<p style='text-align:right; color:#666; font-size:0.85rem; margin:0;'>👤 {c_manager}</p>", unsafe_allow_html=True)
+                                st.markdown(f"<p style='text-align:right; color:#888; font-size:0.8rem; margin:0;'>👤 {c_manager}</p>", unsafe_allow_html=True)
                             
-                            # 2. 상담 내용 박스
+                            # 2. 상담 내용 박스 (가독성을 위해 배경을 아주 연한 회색으로)
                             st.markdown(f"""
                                 <div style="
-                                    background-color: #ffffff; 
-                                    padding: 12px; 
-                                    border: 1px solid #eee;
+                                    background-color: #f9f9f9; 
+                                    padding: 10px 12px; 
                                     border-radius: 6px; 
-                                    margin-top: 10px;
-                                    font-size: 0.95rem;
-                                    color: #222;
-                                    line-height: 1.6;
+                                    margin-top: 8px;
+                                    font-size: 0.9rem;
+                                    color: #333;
+                                    line-height: 1.5;
+                                    border-left: 4px solid {style['bg']};
                                 ">
                                     {c_content}
                                 </div>
@@ -282,9 +307,10 @@ def render():
 
                     # 하단: 상담 내용
                     c_content = st.text_area("🗒️ 상담 상세 내용", placeholder="내용을 입력하세요.", height=120)
-
+                 
                     # 통합 저장 버튼
                     submit_btn = st.form_submit_button("🚀 기록 저장 및 상태 업데이트", use_container_width=True)
+                    
 
                     if submit_btn:
                         if not c_content.strip():

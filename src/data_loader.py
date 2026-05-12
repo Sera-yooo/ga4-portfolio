@@ -129,6 +129,7 @@ def append_new_school_data(data_list):
     except Exception as e:
         st.error(f"데이터 추가 실패: {e}")
         return False
+
     
    
 # 총판 체험 계정 관리 시트 URL
@@ -303,12 +304,16 @@ def add_consulting_log(index, school_name, c_date, c_type, content, manager):
         sh = client.open_by_url(TRIAL_SHEET_URL)
         worksheet = sh.worksheet("체험학교상담로그")
         
-        # 전달받은 날짜 객체를 문자열로 변환 (UI에서 받아온 date 객체 사용)
+        # 전달받은 날짜 객체를 문자열로 변환
         date_str = c_date.strftime("%Y-%m-%d") if hasattr(c_date, 'strftime') else str(c_date)
         
-        # 새 행 추가
+        # 새 행 데이터
         new_row = [index, school_name, date_str, c_type, content, manager]
-        worksheet.append_row(new_row)
+        
+        # 🚀 [핵심 수정] value_input_option을 추가하여 사용자가 직접 입력하는 방식으로 설정
+        # 이렇게 하면 ' 기호가 붙지 않고 숫자와 날짜로 정확히 입력됩니다.
+        worksheet.append_row(new_row, value_input_option='USER_ENTERED')
+        
         return True
     except Exception as e:
         st.error(f"로그 저장 실패: {e}")
