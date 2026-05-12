@@ -128,6 +128,8 @@ def render():
             new_row[6] = formatted_phone    # G: 연락처
             new_row[7] = teacher_email      # H: 이메일
             new_row[8] = inflow_path        # I: 유입경로 (선택값)
+
+            new_row[14] = "미상담"        # O: 상담상태(고정값)            
             
             new_row[15] = "부"               # P: 진행상태 (고정값)
             new_row[18] = process_status    # S: 진행여부

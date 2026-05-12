@@ -39,11 +39,11 @@ def load_school_trial_data():
                     "유입경로": row[8].strip() if len(row) > 7 else "",    # I
                     
                     # --- 상담 및 상태 정보 ---
-                    "1차상담": row[12].strip() if len(row) > 11 else "",   # M
-                    "2차상담": row[13].strip() if len(row) > 12 else "",   # N
-                    "3차상담": row[14].strip() if len(row) > 13 else "",   # O
-                    "진행상태": row[15].strip() if len(row) > 14 else "부", # R
-                    "진행여부": row[18].strip() if len(row) > 17 else "",   # P
+                    "상담내용": row[12].strip() if len(row) > 12 else "",       # M열 (13번째 -> index 12)
+                    "마지막상담일자": row[13].strip() if len(row) > 13 else "",   # N열 (14번째 -> index 13)
+                    "상담상태": row[14].strip() if len(row) > 14 else "",       # O열 (15번째 -> index 14)
+                    "진행여부": row[15].strip() if len(row) > 15 else "부",     # P열 (16번째 -> index 15)
+                    "진행상태": row[17].strip() if len(row) > 17 else "부",     # R열 (18번째 -> index 17)
                     
                     # --- 계정 및 날짜 정보 ---
                     "학교코드": s_code,                                    # T
@@ -62,6 +62,55 @@ def load_school_trial_data():
         st.error(f"데이터 로드 실패: {e}")
         return pd.DataFrame()
     
+def load_trial_consulting_logs():
+    """
+    체험학교상담로그 시트의 모든 데이터를 불러오는 함수
+    컬럼: 체험인덱스, 학교명, 날짜, 상담유형, 상담내용, 담당자
+    """
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+
+        sh = client.open_by_url(TRIAL_SHEET_URL)
+        # '체험학교상담로그' 시트 이름으로 워크시트 가져오기
+        worksheet = sh.worksheet("체험학교상담로그") 
+        
+        all_values = worksheet.get_all_values()
+        
+        # 첫 줄이 컬럼명인 경우 [1:] 부터, 데이터만 있는 경우 [0:] 부터 사용
+        # 보통 1행은 헤더이므로 [1:]을 권장합니다.
+        raw_rows = all_values[1:] 
+        
+        log_data_list = []
+        for row in raw_rows:
+            # 체험인덱스(A열)가 있는 경우만 처리
+            if len(row) > 0 and row[0].strip():
+                log_data_list.append({
+                    "체험인덱스": row[0].strip(), # A
+                    "학교명": row[1].strip() if len(row) > 1 else "",   # B
+                    "날짜": row[2].strip() if len(row) > 2 else "",     # C
+                    "상담유형": row[3].strip() if len(row) > 3 else "",   # D
+                    "상담내용": row[4].strip() if len(row) > 4 else "",   # E
+                    "담당자": row[5].strip() if len(row) > 5 else ""      # F
+                })
+        
+        df = pd.DataFrame(log_data_list)
+        
+        # 날짜 컬럼이 있을 경우 정렬을 위해 날짜형식 변환 (선택 사항)
+        if not df.empty and "날짜" in df.columns:
+            df["날짜"] = pd.to_datetime(df["날짜"], errors='coerce')
+            # 최신순 정렬 (스프레드시트의 INDEX/SORT 함수와 동일한 로직을 위함)
+            df = df.sort_values(by="날짜", ascending=False)
+            
+        return df
+
+    except Exception as e:
+        st.error(f"상담 로그 로드 실패: {e}")
+        return pd.DataFrame()
+
+
 def append_new_school_data(data_list):
     # 체험학교 입력 시트
 
@@ -81,7 +130,7 @@ def append_new_school_data(data_list):
         st.error(f"데이터 추가 실패: {e}")
         return False
     
-    
+   
 # 총판 체험 계정 관리 시트 URL
 CP_TRIAL_URL = "https://docs.google.com/spreadsheets/d/1ZL3p5WKL_c0h5DAbLoFgULx6_n3boF5M27nuKdMPrhM/"
 
@@ -220,3 +269,47 @@ def load_distributor_monitoring_data():
     except Exception as e:
         st.error(f"❌ 데이터 로드 중 오류 발생: {e}")
         return pd.DataFrame()
+
+# 상담 상태 업데이트 (상담/체험학교 시트 O열)
+def update_school_status(index, new_status):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+        
+        sh = client.open_by_url(TRIAL_SHEET_URL)
+        worksheet = sh.get_worksheet_by_id(414849783) # 아까 사용한 그 시트 ID
+        
+        # A열(순번)에서 인덱스 위치 찾기
+        cell = worksheet.find(str(index))
+        if cell:
+            # O열(15번째 열) 업데이트
+            worksheet.update_cell(cell.row, 15, new_status)
+            return True
+        return False
+    except Exception as e:
+        st.error(f"상태 업데이트 실패: {e}")
+        return False
+    
+# 상담 로그 추가 (체험학교상담로그 시트)
+def add_consulting_log(index, school_name, c_date, c_type, content, manager):
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        client = gspread.authorize(creds)
+        
+        sh = client.open_by_url(TRIAL_SHEET_URL)
+        worksheet = sh.worksheet("체험학교상담로그")
+        
+        # 전달받은 날짜 객체를 문자열로 변환 (UI에서 받아온 date 객체 사용)
+        date_str = c_date.strftime("%Y-%m-%d") if hasattr(c_date, 'strftime') else str(c_date)
+        
+        # 새 행 추가
+        new_row = [index, school_name, date_str, c_type, content, manager]
+        worksheet.append_row(new_row)
+        return True
+    except Exception as e:
+        st.error(f"로그 저장 실패: {e}")
+        return False
