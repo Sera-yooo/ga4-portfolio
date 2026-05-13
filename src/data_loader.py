@@ -129,7 +129,7 @@ def append_new_school_data(data_list):
     except Exception as e:
         st.error(f"데이터 추가 실패: {e}")
         return False
-
+ 
     
    
 # 총판 체험 계정 관리 시트 URL

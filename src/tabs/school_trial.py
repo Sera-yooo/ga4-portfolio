@@ -306,12 +306,12 @@ def render():
                         c_manager = st.text_input("👤 담당자명", value=school_data.get("교사명", "담당자"))
 
                     # 하단: 상담 내용
-                    c_content = st.text_area("🗒️ 상담 상세 내용", placeholder="내용을 입력하세요.", height=120)
+                    c_content = st.text_area("🗒️ 상담 상세 내용", placeholder="내용을 입력하세요.", height=120)  
                  
                     # 통합 저장 버튼
                     submit_btn = st.form_submit_button("🚀 기록 저장 및 상태 업데이트", use_container_width=True)
                     
-
+ 
                     if submit_btn:
                         if not c_content.strip():
                             st.warning("내용을 입력해 주세요.")
