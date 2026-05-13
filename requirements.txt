@@ -8,3 +8,6 @@ gspread
 oauth2client
 PyYAML
 python-pptx
+openai
+langchain
+google-generativeai
