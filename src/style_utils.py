@@ -291,7 +291,7 @@ def render_project_card(emoji, title, description, page_name, key):
 
 def render_info_card(emoji, title, content_html):
     """HTML 태그 오류를 방지하기 위해 f-string 구조를 명확히 함"""
-    st.markdown(f"""
+    st.markdown(f"""  
         <div style="
             background: white;
             border-radius: 20px;
