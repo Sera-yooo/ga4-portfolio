@@ -288,7 +288,28 @@ def render_project_card(emoji, title, description, page_name, key):
     # 버튼 클릭 시 pages/폴더 내의 해당 파일로 이동
     if st.button(f"{title} 이동", key=key, use_container_width=True):
         st.switch_page(f"pages/{page_name}.py")
-        
+
+def render_info_card(emoji, title, content_html):
+    """HTML 태그 오류를 방지하기 위해 f-string 구조를 명확히 함"""
+    st.markdown(f"""
+        <div style="
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            border: 1px solid rgba(14, 165, 233, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
+        ">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <span style="font-size: 30px;">{emoji}</span>
+                <h3 style="margin: 0; color: #0F172A; font-size: 20px; font-weight: 800;">{title}</h3>
+            </div>
+            <div style="color: #475569; font-size: 14.5px; line-height: 1.7;">
+                {content_html}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
 def render_footer_badge():
     """애니메이션이 포함된 하단 배너 렌더링"""
     st.markdown("""
