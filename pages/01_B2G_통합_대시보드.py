@@ -12,11 +12,11 @@ style.apply_common_style()
 
 # 2. 분리된 탭 파일들 불러오기
 from src.tabs import (
-    main_task, 
+    main_task,
+    message_work, 
     school_trial, 
     school_contract, 
     partner, 
-    message_work, 
     mail_Templates,
     school_trial_input 
 )
