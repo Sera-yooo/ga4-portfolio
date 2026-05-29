@@ -19,7 +19,7 @@ from src.mail import catalog, engine
 # ---------- 작은 도우미들 ----------
 def _fmt_date(v):
     """시트 날짜값(문자/날짜 무엇이든) -> 'YYYY-MM-DD'."""
-    if v is None or str(v).strip() == "":
+    if v is None or str(v).strip() == "":    
         return ""
     s = str(v).strip()
     try:
