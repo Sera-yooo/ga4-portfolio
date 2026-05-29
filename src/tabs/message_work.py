@@ -15,7 +15,7 @@ import streamlit as st
 from src.data_loader import load_school_trial_data, load_contract_school_data
 from src.mail import catalog, engine
 
-
+ 
 # ---------- 작은 도우미들 ----------
 def _fmt_date(v):
     """시트 날짜값(문자/날짜 무엇이든) -> 'YYYY-MM-DD'."""
