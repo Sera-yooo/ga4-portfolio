@@ -203,23 +203,26 @@ def load_contract_school_data():
                     "상세지역": row[2].strip(),         # C
                     "학교명": row[3].strip(),           # D
                     "학교고유번호": row[5].strip(),      # F (Index 5)
-                    "학교사업자번호": row[6].strip(),      # G (Index 5)
+                    "학교사업자번호": row[6].strip(),    # G (Index 6)
                     "학교코드": row[7].strip(),         # H (Index 7)
-                    "이전 체험 현황": row[8].strip(),         # I (Index 8)
-		            "체험일": row[9].strip(),         # J (Index 9)
-                    "계약교사명": row[10].strip(),       # K (Index 10)
-                    "계약교사연락처": row[11].strip(),    # L (Index 11)
-                    "계약교사이메일": row[12].strip(),    # M (Index 12)
-                    "관리교사명": row[13].strip(),       # N (Index 13)
-                    "관리교사연락처": row[14].strip(),    # O (Index 14)
-                    "관리교사이메일": row[15].strip(),    # P (Index 15)
-                    "계약회차": row[16].strip(),         # Q (Index 16)
-                    "계약일": row[17].strip(),           # R (Index 17)
-                    "계약학생수": row[18].strip(),       # S (Index 18)
-                    "계약단위": row[19].strip(),       # T (Index 19)
-                    "시작일": row[20].strip(),           # U (Index 20)
-                    "종료일": row[21].strip(),           # V (Index 21)
-                    "총금액(vat포함)": row[23].strip(),           # X (Index 23)
+                    "이전 체험 현황": row[8].strip(),   # I (Index 8)
+                    "체험일": row[9].strip(),           # J (Index 9)
+                    "견적발송날짜": row[10].strip(),       # K (Index 10)  
+                    "견적계약여부": row[11].strip(),       # L (Index 11)  
+                    "견적반려사유": row[12].strip(),       # M (Index 12)  
+                    "계약교사명": row[13].strip(),      # N (Index 13)  ← +3
+                    "계약교사연락처": row[14].strip(),  # O (Index 14)  ← +3
+                    "계약교사이메일": row[15].strip(),  # P (Index 15)  ← +3
+                    "관리교사명": row[16].strip(),      # Q (Index 16)  ← +3
+                    "관리교사연락처": row[17].strip(),  # R (Index 17)  ← +3
+                    "관리교사이메일": row[18].strip(),  # S (Index 18)  ← +3
+                    "계약회차": row[19].strip(),        # T (Index 19)  ← +3
+                    "계약일": row[20].strip(),          # U (Index 20)  ← +3
+                    "계약학생수": row[21].strip(),      # V (Index 21)  ← +3
+                    "계약단위": row[22].strip(),        # W (Index 22)  ← +3
+                    "시작일": row[23].strip(),          # X (Index 23)  ← +3
+                    "종료일": row[24].strip(),          # Y (Index 24)  ← +3
+                    "총금액(vat포함)": row[26].strip(), # AA (Index 26) ← +3
                 })
         return pd.DataFrame(data_list)
     except Exception as e:

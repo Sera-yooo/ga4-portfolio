@@ -68,6 +68,11 @@ def render():
         no = st.text_input("체험 시트 순번(A열) 입력", key="mw_trial_no")
         row = _find_row(df, no)
 
+        # 순번이 바뀌면 이전에 생성한 결과를 지운다(다른 학교 본문이 남는 것 방지)
+        if st.session_state.get("mw_trial_last_no") != no:
+            st.session_state.pop("mw_trial_result", None)
+            st.session_state["mw_trial_last_no"] = no
+
         if no and row is None:
             st.error("❌ 해당 순번을 찾을 수 없습니다.")
 
@@ -83,10 +88,10 @@ def render():
 
             with st.container(border=True):
                 c1, c2 = st.columns(2)
-                c1.text_input("학교명", value=ctx["sch"], disabled=True, key="mw_t_sch")
+                c1.text_input("학교명", value=ctx["sch"], disabled=True)
                 c2.text_input("체험 기간", value=f"{ctx['s_str']} ~ {ctx['e_str']}",
-                              disabled=True, key="mw_t_period")
-                c1.text_input("선생님 성함", value=ctx["tea"], disabled=True, key="mw_t_tea")
+                              disabled=True)
+                c1.text_input("선생님 성함", value=ctx["tea"], disabled=True)
                 st.caption("선생님 성함이 비어 있으면 시트 F열을 확인하세요. (계정은 항상 TEST 고정)")
 
             b1, b2 = st.columns(2)
@@ -111,6 +116,12 @@ def render():
         cno = st.text_input("계약 시트 순번(A열) 입력", key="mw_c_no")
         crow = _find_row(cdf, cno)
 
+        # 순번이 바뀌면 이전에 생성한 결과 + 직접 입력값(교사수/인원/비번)을 모두 초기화
+        if st.session_state.get("mw_contract_last_no") != cno:
+            for k in ("mw_contract_result", "mw_c_pw", "mw_c_nt", "mw_c_ntot"):
+                st.session_state.pop(k, None)
+            st.session_state["mw_contract_last_no"] = cno
+
         if cno and crow is None:
             st.error("❌ 해당 순번을 찾을 수 없습니다.")
 
@@ -132,11 +143,11 @@ def render():
             # 입력칸 + 버튼을 form 으로 묶음 → 버튼 누르기 전엔 다시 안 그려짐(버벅임 X)
             with st.form("mw_contract_form"):
                 c1, c2 = st.columns(2)
-                c1.text_input("계약 학교명", value=base["sch"], disabled=True, key="mw_c_sch")
+                c1.text_input("계약 학교명", value=base["sch"], disabled=True)
                 c2.text_input("이용 기간", value=f"{base['s_str']} ~ {base['e_str']}",
-                              disabled=True, key="mw_c_period")
-                c1.text_input("담당 선생님", value=base["tea"], disabled=True, key="mw_c_tea")
-                c2.text_input("관리자 ID (메일)", value=base["adm_id"], disabled=True, key="mw_c_admid")
+                              disabled=True)
+                c1.text_input("담당 선생님", value=base["tea"], disabled=True)
+                c2.text_input("관리자 ID (메일)", value=base["adm_id"], disabled=True)
 
                 st.markdown("###### ✍️ 직접 입력 (시트에 없는 값만)")
                 d1, d2, d3 = st.columns(3)

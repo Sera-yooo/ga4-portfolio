@@ -4,6 +4,31 @@ from datetime import datetime, date
 from src.data_loader import load_contract_school_data
 from src.style_utils import render_stat_card
 
+
+# 임박 기준(일). 며칠 전부터 챙길지 — 여기 숫자만 바꾸면 됨.
+IMMINENT_DAYS = 14
+
+
+def _days_left(end_val, today):
+    """종료일까지 남은 일수. 값이 없거나 이상하면 None."""
+    if end_val is None or pd.isna(end_val) or str(end_val).strip() == "":
+        return None
+    try:
+        return (pd.to_datetime(end_val).date() - today).days
+    except Exception:
+        return None
+
+
+def _fmt_date(v):
+    """날짜값 -> 'YYYY-MM-DD' (실패하면 원본 앞 10자)."""
+    if v is None or str(v).strip() == "":
+        return "-"
+    try:
+        return pd.to_datetime(v).strftime("%Y-%m-%d")
+    except Exception:
+        return str(v)[:10]
+
+
 def render():
     c1, c2 = st.columns(2)
     with c1:
@@ -31,12 +56,82 @@ def render():
             end_dt = pd.to_datetime(end_date_val).date()
             diff = (end_dt - today).days
             if diff < 0: return "⌛ 계약종료"
-            elif diff <= 30: return f"🚨 만료임박(D-{diff})"
+            elif diff <= IMMINENT_DAYS: return f"🚨 만료임박(D-{diff})"
             else: return "✅ 정상운영"
         except Exception:
             return "⚠️ 확인필요"
 
     df['운영상태'] = df.apply(calculate_contract_status, axis=1)
+
+    # =========================================================
+    # 🔔 곧 만료되는 학교 (D-14 이내) — 이 페이지의 핵심
+    #   · 임박한 학교만 위에 모아서 표시 (이미 끝난 건 아래 표에만 기록)
+    #   · 전화로 챙기실 수 있게 관리교사 이름·연락처도 함께 노출
+    # =========================================================
+    df['_dleft'] = df['종료일'].apply(lambda v: _days_left(v, today))
+    imminent = (
+        df[df['_dleft'].notna() & (df['_dleft'] >= 0) & (df['_dleft'] <= IMMINENT_DAYS)]
+        .sort_values('_dleft')
+    )
+
+    st.markdown(f"#### 🔔 곧 만료되는 학교 (D-{IMMINENT_DAYS} 이내)")
+    if imminent.empty:
+        st.success(f"✅ {IMMINENT_DAYS}일 내 만료 예정 학교가 없습니다.")
+    else:
+        with st.container(border=True):
+            for _, r in imminent.iterrows():
+                d = int(r['_dleft'])
+                tag = "오늘 만료" if d == 0 else f"D-{d}"
+                line = f"🚨 **{r['학교명']}**  ·  {tag}  ·  종료 {_fmt_date(r['종료일'])}"
+                mgr = str(r.get('관리교사명', '') or '').strip()
+                tel = str(r.get('관리교사연락처', '') or '').strip()
+                if mgr:
+                    line += f"  ·  담당 {mgr}"
+                if tel:
+                    line += f"  ·  ☎ {tel}"
+                st.markdown(line)
+        st.caption("※ 서비스 점검차 연락이 필요한 학교입니다. 이미 만료된 학교는 아래 목록에서 확인하세요.")
+
+    st.divider()
+
+    # =========================================================
+    # 📋 견적 현황 — 견적발송 / 계약완료 / 반려
+    #   · 판정: '견적계약여부'(L열) 값을 그대로 사용
+    #   · 회신 대기(='견적발송' 상태)만 펼쳐서 강조 (계약/반려는 끝난 상태)
+    # =========================================================
+    def _quote_status(row):
+        v = str(row.get('견적계약여부', '') or '').strip()
+        return v if v else "-"
+
+    df['견적상태'] = df.apply(_quote_status, axis=1)
+
+    q_sent = df[df['견적상태'] == "견적발송"]
+    q_done = len(df[df['견적상태'] == "계약완료"])
+    q_rej = len(df[df['견적상태'] == "반려"])
+
+    st.markdown("#### 📋 견적 현황")
+    st.markdown(f"견적발송(회신대기) **{len(q_sent)}** · 계약완료 **{q_done}** · 반려 **{q_rej}**")
+
+    if not q_sent.empty:
+        with st.expander(f"▸ 회신 대기 중인 학교 {len(q_sent)}곳 보기", expanded=False):
+            for _, r in q_sent.iterrows():
+                line = f"📨 **{r['학교명']}**"
+                sent_disp = _fmt_date(r.get('견적발송날짜'))
+                dleft = _days_left(r.get('견적발송날짜'), today)
+                if sent_disp != "-":
+                    line += f"  ·  발송 {sent_disp}"
+                    if dleft is not None:
+                        line += f" ({abs(dleft)}일 경과)"
+                mgr = str(r.get('계약교사명', '') or '').strip()
+                tel = str(r.get('계약교사연락처', '') or '').strip()
+                if mgr:
+                    line += f"  ·  담당 {mgr}"
+                if tel:
+                    line += f"  ·  ☎ {tel}"
+                st.markdown(line)
+        st.caption("※ 견적 보냈으나 아직 계약/반려로 정리되지 않은 학교입니다.")
+
+    st.divider()
 
     # 상단 요약 수치
     total_contracts = len(df[df['운영상태'] != "⌛ 계약종료"]) 
@@ -46,13 +141,13 @@ def render():
     with col1:
         render_stat_card(emoji="🏫", title="총 계약 운영 학교", value=total_contracts, unit="개교", description="현재 서비스를 이용 중인 전체 학교입니다.")
     with col2:
-        render_stat_card(emoji="🚨", title="한 달 내 종료 예정", value=expiring_count, unit="개교", description="30일 이내 계약 만료 예정 학교입니다.")
+        render_stat_card(emoji="🚨", title="2주 내 종료 예정", value=expiring_count, unit="개교", description=f"{IMMINENT_DAYS}일 이내 계약 만료 예정 학교입니다.")
 
     st.divider()
 
     # 3. 검색 및 필터 UI
     with st.expander("🔍 상세 검색 및 필터", expanded=True):
-        f1, f2, f3 = st.columns([1.5, 1, 1])
+        f1, f2, f3, f4 = st.columns([1.5, 1, 1, 1])
         with f1:
             search_query = st.text_input("통합 검색 (학교명/교사명/코드/고유번호)", placeholder="검색어를 입력하세요")
         with f2:
@@ -61,6 +156,9 @@ def render():
         with f3:
             status_list = ["전체", "✅ 정상운영", "🚨 만료임박", "⌛ 계약종료"]
             selected_status = st.selectbox("🚦 운영 상태", status_list)
+        with f4:
+            quote_list = ["전체", "견적발송", "계약완료", "반려"]
+            selected_quote = st.selectbox("📋 견적 상태", quote_list)
 
     # 필터링 적용
     filtered_df = df.copy()
@@ -76,32 +174,35 @@ def render():
     if selected_status != "전체":
         clean_status = selected_status.split()[-1]
         filtered_df = filtered_df[filtered_df['운영상태'].str.contains(clean_status)]
+    if selected_quote != "전체":
+        filtered_df = filtered_df[filtered_df['견적상태'] == selected_quote]
 
     def style_contract_row(row):
-        """
-        운영상태에 따른 행 스타일 정의
-        """
-        # '운영상태' 컬럼의 값을 가져옵니다.
-        status = row.get('운영상태', '')
-        
-        # 1. 만료 임박: 연한 노란색 배경 (주의 필요)
-        if "🚨 만료임박" in status:
-            return ['background-color: #fff9c4; color: #850; font-weight: bold'] * len(row)
-        
-        # 2. 계약 종료: 회색 글자 + 취소선 (종료된 데이터)
-        elif "⌛ 계약종료" in status:
-            return ['color: #999; text-decoration: line-through'] * len(row)
-        
-        # 3. 정상 운영: 별도 스타일 없음 (또는 필요시 연한 녹색 등 설정 가능)
-        elif "✅ 정상운영" in status:
-            # return ['background-color: #e8f5e9'] * len(row) # 필요시 주석 해제
-            return [''] * len(row)
-            
-        # 4. 정보 없음 또는 확인 필요
+        """배경색 = 만료 상태(행 전체), 글씨색 = 견적 상태(견적상태 칸만)."""
+        status = str(row.get('운영상태', ''))
+
+        # --- 배경/행 스타일: 만료 기준 ---
+        if "⌛ 계약종료" in status:
+            base, ended = 'color: #999; text-decoration: line-through', True
+        elif "🚨 만료임박" in status:
+            base, ended = 'background-color: #fff9c4; font-weight: bold', False
         elif "⚪" in status or "⚠️" in status:
-            return ['color: #d32f2f'] * len(row)
-            
-        return [''] * len(row)
+            base, ended = 'color: #d32f2f', False
+        else:
+            base, ended = '', False
+
+        styles = [base] * len(row)
+
+        # --- 견적상태 칸만 글씨색 (종료된 행은 회색 유지) ---
+        if not ended and '견적상태' in row.index:
+            q = str(row.get('견적상태', '')).strip()
+            qcolor = {"견적발송": "#e67e22", "계약완료": "#2e7d32", "반려": "#d32f2f"}.get(q, "")
+            if qcolor:
+                i = row.index.get_loc('견적상태')
+                sep = '; ' if styles[i] else ''
+                styles[i] = f'{styles[i]}{sep}color: {qcolor}; font-weight: 600'
+
+        return styles
 
     # ---------------------------------------------------------
     # 🏝️ 데이터 출력부 (유동적 레이아웃)
@@ -126,11 +227,17 @@ def render():
     with col_list:
         st.write(f"📊 검색 결과: **{len(filtered_df)}** 건")
         
-        # 표에는 꼭 필요한 것만!
-        list_display_cols = ["순번", "지역명", "학교명", "운영상태", "관리교사명", "시작일", "종료일"]
+        # 표시할 컬럼(요청 순서). 색칠은 '운영상태'를 보고 하므로 데이터엔 남겨두고,
+        # column_order 로 보이는 컬럼만 제한한다.
+        list_display_cols = ["학교명", "학교코드", "시작일", "종료일", "견적상태", "계약교사명", "계약교사연락처"]
+        list_df = filtered_df.copy()
+        list_df['_dleft'] = list_df['종료일'].apply(lambda v: _days_left(v, today))
+        # 남은 일수 오름차순(임박 먼저), 날짜 없는 곳은 맨 뒤로
+        list_df = list_df.sort_values('_dleft', na_position='last').reset_index(drop=True)
 
         selection = st.dataframe(
-            filtered_df[list_display_cols].style.apply(style_contract_row, axis=1),
+            list_df.style.apply(style_contract_row, axis=1),
+            column_order=list_display_cols,
             use_container_width=True,
             hide_index=True,
             on_select="rerun",
@@ -146,7 +253,7 @@ def render():
     if col_detail and selection.selection.rows:
         try:
             selected_row_index = selection.selection.rows[0]
-            school_data = filtered_df.iloc[selected_row_index]
+            school_data = list_df.iloc[selected_row_index]
             
             with col_detail:
                 st.write("") # 상단 여백
